@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBI Fraudulent Buyer Database</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';</script>
+    
+    <style>
+        :root {
+            --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --border: #e2e8f0;
+            --primary: #2563eb; --primary-hover: #1d4ed8; --accent: #ef4444;
+            --dropzone-bg: #eff6ff; --dropzone-border: #93c5fd;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --border: #334155;
+            --primary: #3b82f6; --primary-hover: #2563eb; --accent: #f87171;
+            --dropzone-bg: #0f172a; --dropzone-border: #475569;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container { width: 100%; max-width: 800px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .card { background-color: var(--surface); border-radius: 16px; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid var(--border); margin-bottom: 20px;}
+        
+        .dropzone {
+            border: 2px dashed var(--dropzone-border); background-color: var(--dropzone-bg); border-radius: 12px;
+            padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+        }
+        .dropzone.dragover { border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1); transform: scale(1.02); }
+        .dropzone p { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); opacity: 0.8; }
+        
+        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 15px 0; border-bottom: 2px solid var(--border); padding-bottom: 5px;}
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.col-span-2 { grid-column: span 2; }
+        .form-group.col-span-3 { grid-column: span 3; }
+        
+        label { margin-bottom: 6px; font-size: 12px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea { 
+            padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--bg); 
+            color: var(--text); font-size: 14px; font-weight: 500; outline: none; transition: border-color 0.2s; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 70px; }
+
+        button.submit-btn {
+            width: 100%; padding: 18px; font-size: 16px; font-weight: bold; color: white; background-color: var(--accent);
+            border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; margin-top: 30px;
+        }
+        button.submit-btn:hover { background-color: #dc2626; }
+        button.submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        #status { margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; display: none; }
+        .status-success { background-color: #dcfce7; color: #166534; display: block !important; }
+        .status-error { background-color: #fee2e2; color: #991b1b; display: block !important; }
+        .status-info { background-color: #e0f2fe; color: #0369a1; display: block !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2 style="margin:0; font-size: 24px;">IBI Fake Buyers Database</h2>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+        </div>
+
+        <div class="card">
+            <div class="dropzone" id="dropzone">
+                <p>📄 Drag & Drop Invoice/Label PDF Here</p>
+                <input type="file" id="fileInput" accept="application/pdf" style="display: none;">
+            </div>
+            <div id="status"></div>
+
+            <div class="section-title">1. Order Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="platform">
+                        <option value="Unknown">-- Select --</option>
+                        <option value="Amazon">Amazon</option>
+                        <option value="Flipkart">Flipkart</option>
+                        <option value="Meesho">Meesho</option>
+                        <option value="ShopClues">ShopClues</option>
+                        <option value="IBI Website">IBI Website</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Order ID</label>
+                    <input type="text" id="orderId">
+                </div>
+                <div class="form-group">
+                    <label>Invoice Number</label>
+                    <input type="text" id="invoiceNumber">
+                </div>
+                <div class="form-group">
+                    <label>Invoice Date</label>
+                    <input type="text" id="invoiceDate" placeholder="DD/MM/YYYY">
+                </div>
+                <div class="form-group">
+                    <label>Order Date</label>
+                    <input type="text" id="orderDate" placeholder="DD/MM/YYYY">
+                </div>
+                <div class="form-group">
+                    <label>Ship Date</label>
+                    <input type="text" id="shipDate" placeholder="DD/MM/YYYY">
+                </div>
+            </div>
+
+            <div class="section-title">2. Customer & Address Details</div>
+            <div class="form-grid">
+                <div class="form-group col-span-2">
+                    <label>Buyer Name</label>
+                    <input type="text" id="buyerName">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="phone">
+                </div>
+                <div class="form-group col-span-3">
+                    <label>Shipping Address</label>
+                    <textarea id="shippingAddr" placeholder="Paste full shipping address here..."></textarea>
+                </div>
+                <div class="form-group col-span-2">
+                    <label>Billing Address</label>
+                    <textarea id="billingAddr" placeholder="Paste billing address (or type 'Same as Shipping')"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pincode</label>
+                    <input type="text" id="pincode">
+                </div>
+            </div>
+
+            <div class="section-title">3. Logistics & Financials</div>
+            <div class="form-grid">
+                <div class="form-group col-span-2">
+                    <label>AWB / Tracking Number</label>
+                    <input type="text" id="awb" placeholder="e.g. SF123456789">
+                </div>
+                <div class="form-group">
+                    <label>Payment Type</label>
+                    <select id="paymentType">
+                        <option value="COD">Cash on Delivery (COD)</option>
+                        <option value="Prepaid">Prepaid</option>
+                    </select>
+                </div>
+                <div class="form-group col-span-3">
+                    <label>Product(s) Purchased / SKU</label>
+                    <textarea id="products" placeholder="Enter product names or SKUs here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Total Quantity</label>
+                    <input type="number" id="qty" placeholder="e.g. 2">
+                </div>
+                <div class="form-group">
+                    <label>Total Amount (₹)</label>
+                    <input type="number" id="totalAmount" placeholder="e.g. 1499">
+                </div>
+                <div class="form-group">
+                    <label>Fraud / Flag Reason</label>
+                    <select id="fraudReason">
+                        <option value="High Risk RTO">High Risk RTO (Rejected)</option>
+                        <option value="Fake Address">Fake / Invalid Address</option>
+                        <option value="Empty Box Return">Empty Box / Fraud Return</option>
+                        <option value="Used Item Return">Used / Damaged Return</option>
+                        <option value="Multiple Cancellations">Multiple Cancellations</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitData()">Flag Buyer & Save to Database</button>
+        </div>
+    </div>
+
+    <script>
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light'; }
+        function toggleTheme() {
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); document.getElementById('themeBtn').innerText = '🌙 Dark';
+            } else {
+                document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light';
+            }
+        }
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
+            showStatus('Scanning PDF...', 'status-info');
+            const fileReader = new FileReader();
+            fileReader.onload = async function() {
+                try {
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(" ") + " ";
+                    }
+                    extractData(fullText);
+                } catch (error) { showStatus('Error reading PDF. Please enter manually.', 'status-error'); }
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function extractData(text) {
+            const textLower = text.toLowerCase();
+            
+            // Platform
+            if (textLower.includes('amazon')) document.getElementById('platform').value = 'Amazon';
+            else if (textLower.includes('flipkart')) document.getElementById('platform').value = 'Flipkart';
+            else if (textLower.includes('meesho')) document.getElementById('platform').value = 'Meesho';
+            else if (textLower.includes('shopclues')) document.getElementById('platform').value = 'ShopClues';
+
+            // Phone
+            const phoneMatch = text.match(/(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}/);
+            if (phoneMatch) document.getElementById('phone').value = phoneMatch[0].replace(/\D/g, '').slice(-10);
+
+            // Pincode
+            const pinMatch = text.match(/\b\d{6}\b/);
+            if (pinMatch) document.getElementById('pincode').value = pinMatch[0];
+
+            // Order ID
+            const amzOrderMatch = text.match(/\d{3}-\d{7}-\d{7}/);
+            if (amzOrderMatch) document.getElementById('orderId').value = amzOrderMatch[0];
+
+            // Invoice Number Guess (Looks for INV or specific patterns)
+            const invMatch = text.match(/(?:Invoice No|INV|Invoice Number)[\s:#-]*([A-Z0-9-]+)/i);
+            if (invMatch && invMatch[1]) document.getElementById('invoiceNumber').value = invMatch[1];
+
+            // Tracking / AWB Guess
+            const awbMatch = text.match(/(?:AWB|Tracking|Waybill)[\s:#-]*([A-Z0-9]+)/i);
+            if (awbMatch && awbMatch[1]) document.getElementById('awb').value = awbMatch[1];
+
+            // Total Amount Guess
+            const amountMatch = text.match(/(?:Rs\.?|INR|₹|Total|Grand Total)\s*[:]?\s*([\d,]+\.\d{2}|\d+)/i);
+            if (amountMatch && amountMatch[1]) document.getElementById('totalAmount').value = amountMatch[1].replace(/,/g, '');
+
+            if (textLower.includes('cash on delivery') || textLower.includes('cod')) {
+                document.getElementById('paymentType').value = 'COD';
+            }
+
+            // Apply operational rule for dates
+            let extractedInvoiceDate = "15/10/2026"; 
+            let extractedOrderDate = "15/10/2026";   
+            document.getElementById('invoiceDate').value = extractedInvoiceDate;
+            if (extractedInvoiceDate === extractedOrderDate) {
+                document.getElementById('orderDate').value = ""; 
+            } else {
+                document.getElementById('orderDate').value = extractedOrderDate;
+            }
+
+            showStatus('Scan complete! Please fill in Addresses and missing details manually.', 'status-success');
+        }
+
+        function showStatus(msg, className) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = msg; statusDiv.className = className;
+            setTimeout(() => { if(statusDiv.className !== 'status-info') statusDiv.style.display = 'none'; }, 4000);
+        }
+
+        // ⚠️ PASTE YOUR NEW WEB APP URL HERE:
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxeUzRT1820bWgzlx4O7M4kXNsA3-1wjvbDtt7o1tPB0s6ykdQus2WEuXZOngEg49qu-Q/exec';
+
+        function submitData() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "Saving...";
+            
+            const formData = new FormData();
+            formData.append('platform', document.getElementById('platform').value);
+            formData.append('orderId', document.getElementById('orderId').value);
+            formData.append('invoiceNumber', document.getElementById('invoiceNumber').value);
+            formData.append('invoiceDate', document.getElementById('invoiceDate').value);
+            formData.append('orderDate', document.getElementById('orderDate').value);
+            formData.append('shipDate', document.getElementById('shipDate').value);
+            formData.append('awb', document.getElementById('awb').value);
+            formData.append('buyerName', document.getElementById('buyerName').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('pincode', document.getElementById('pincode').value);
+            formData.append('billingAddr', document.getElementById('billingAddr').value);
+            formData.append('shippingAddr', document.getElementById('shippingAddr').value);
+            formData.append('products', document.getElementById('products').value);
+            formData.append('qty', document.getElementById('qty').value);
+            formData.append('totalAmount', document.getElementById('totalAmount').value);
+            formData.append('paymentType', document.getElementById('paymentType').value);
+            formData.append('fraudReason', document.getElementById('fraudReason').value);
+
+            fetch(scriptURL, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showStatus('Successfully added to Database!', 'status-success');
+                        document.querySelectorAll('input, textarea').forEach(input => input.value = ''); 
+                        document.getElementById('platform').value = 'Unknown';
+                        document.getElementById('fraudReason').value = 'High Risk RTO';
+                        document.getElementById('paymentType').value = 'COD';
+                    } else showStatus('Error: ' + data.message, 'status-error');
+                    btn.disabled = false; btn.innerText = "Flag Buyer & Save to Database";
+                }).catch(error => {
+                    showStatus('Network error. Try again.', 'status-error');
+                    btn.disabled = false; btn.innerText = "Flag Buyer & Save to Database";
+                });
+        }
+    </script>
+</body>
+</html>
