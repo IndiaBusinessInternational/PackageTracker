@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBI Package Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0D1B2A; --navy2:#112236; --navy3:#162d47;
+  --cyan:#00D4F0; --cyan2:rgba(0,212,240,.15); --cyan3:rgba(0,212,240,.07); --cyan4:rgba(0,212,240,.35);
+  --white:#FFFFFF; --muted:#7A9BB5;
+  --border:rgba(0,212,240,.18); --border2:rgba(255,255,255,.07);
+  --green:#00E096; --amber:#FFB020; --red:#FF4D4F; --purple:#A78BFA;
+  --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,212,240,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,240,.04) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* HEADER */
+.header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(13,27,42,.94);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);padding:12px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-dots{display:flex;gap:4px;align-items:flex-end}
+.logo-dots span{background:var(--cyan);border-radius:50%;display:block}
+.logo-dots span:nth-child(1){width:6px;height:6px;opacity:.3}
+.logo-dots span:nth-child(2){width:9px;height:9px;opacity:.6}
+.logo-dots span:nth-child(3){width:13px;height:13px}
+.logo-div{width:1.5px;height:30px;background:var(--border)}
+.logo-text h1{font-size:13.5px;font-weight:800;letter-spacing:.6px;line-height:1.2}
+.logo-text p{font-size:9px;color:var(--cyan);font-style:italic;letter-spacing:1.5px;margin-top:1px}
+.header-r{display:flex;align-items:center;gap:14px}
+.app-title{font-size:15px;font-weight:700;color:var(--cyan)}
+.theme-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:var(--font);transition:all .2s}
+.theme-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* TABS */
+.tabs{
+  position:sticky;top:57px;z-index:190;
+  background:rgba(13,27,42,.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);display:flex;gap:2px;padding:0 28px;
+}
+.tab{padding:14px 22px;font-size:13px;font-weight:700;color:rgba(255,255,255,.35);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;font-family:var(--font);display:flex;align-items:center;gap:8px}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab:hover:not(.active){color:rgba(255,255,255,.7)}
+.tab-count{background:var(--cyan2);color:var(--cyan);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center;font-family:var(--mono)}
+
+/* PANELS */
+.panel{display:none;position:relative;z-index:1}
+.panel.active{display:block}
+.wrap{max-width:900px;margin:0 auto;padding:32px 24px 64px}
+
+/* UPLOAD ZONE */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:20px;padding:52px 32px;
+  text-align:center;cursor:pointer;transition:all .3s;background:var(--cyan3);position:relative;overflow:hidden;
+}
+.upload-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,212,240,.08),transparent 70%);pointer-events:none}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--cyan);background:var(--cyan2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,212,240,.12)}
+.upload-icon{font-size:48px;margin-bottom:16px;display:block}
+.upload-zone h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.upload-zone p{font-size:13.5px;color:var(--muted);line-height:1.6}
+.upload-zone p strong{color:var(--cyan)}
+.ai-pill{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:20px}
+.upload-formats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.fmt-tag{background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:8px;font-size:11px;font-weight:600}
+
+/* STEPPER */
+#stepper{display:none;margin-top:28px}
+.step-card{background:var(--navy2);border:1px solid var(--border2);border-radius:16px;padding:24px 28px}
+.step-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px}
+.steps{display:flex;flex-direction:column}
+.step{display:flex;align-items:flex-start;gap:16px;padding:14px 0;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:15px;top:42px;width:2px;height:calc(100% - 14px);background:var(--border);transition:background .4s}
+.step.done::after,.step.active::after{background:var(--cyan)}
+.step-icon{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--navy);position:relative;z-index:1;transition:all .4s}
+.step.active .step-icon{border-color:var(--cyan);animation:pulse 1.5s infinite}
+.step.done .step-icon{border-color:var(--green);background:rgba(0,224,150,.12)}
+.step.error .step-icon{border-color:var(--red);background:rgba(255,77,79,.12)}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--cyan4)}50%{box-shadow:0 0 20px var(--cyan4),0 0 32px rgba(0,212,240,.15)}}
+.step-label{font-size:14px;font-weight:600;color:var(--muted);transition:color .3s}
+.step.active .step-label{color:var(--white)}
+.step.done .step-label{color:var(--green)}
+.step.error .step-label{color:var(--red)}
+.step-detail{font-size:12px;color:var(--muted);margin-top:3px;display:none}
+.step.active .step-detail,.step.done .step-detail,.step.error .step-detail{display:block}
+
+/* RESULT CARD */
+#resultCard{display:none;margin-top:28px}
+.result-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.result-header{background:linear-gradient(135deg,var(--navy3),var(--navy2));border-bottom:1px solid var(--border);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.result-hl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pf-badge{padding:5px 14px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.4px;font-family:var(--mono)}
+.pf-amazon{background:rgba(255,165,0,.15);color:#FFA500;border:1px solid rgba(255,165,0,.3)}
+.pf-flipkart{background:rgba(45,110,249,.15);color:#5B8FF9;border:1px solid rgba(45,110,249,.3)}
+.pf-meesho{background:rgba(230,76,110,.15);color:#E64C6E;border:1px solid rgba(230,76,110,.3)}
+.pf-shopclues{background:rgba(255,127,0,.15);color:#FF7F00;border:1px solid rgba(255,127,0,.3)}
+.pf-ibi{background:rgba(0,212,240,.15);color:var(--cyan);border:1px solid var(--border)}
+.courier-tag{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cd-amazon{background:#FFA500}.cd-ekart{background:#5B8FF9}.cd-delhivery{background:var(--green)}
+.status-big{padding:7px 18px;border-radius:10px;font-size:13px;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.sb-transit{background:rgba(91,143,249,.15);color:#5B8FF9;border:1px solid rgba(91,143,249,.25)}
+.sb-delivered{background:rgba(0,224,150,.15);color:var(--green);border:1px solid rgba(0,224,150,.25)}
+.sb-ofd{background:rgba(255,176,32,.15);color:var(--amber);border:1px solid rgba(255,176,32,.25)}
+.sb-rto{background:rgba(255,77,79,.15);color:var(--red);border:1px solid rgba(255,77,79,.25)}
+.sb-ndr{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.sb-unknown{background:rgba(122,155,181,.15);color:var(--muted);border:1px solid rgba(122,155,181,.2)}
+
+.result-body{padding:24px 26px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.ib{background:var(--navy);border:1px solid var(--border2);border-radius:10px;padding:12px 14px}
+.ib.w2{grid-column:span 2}.ib.w3{grid-column:span 3}
+.ib-label{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.ib-val{font-size:13px;color:var(--white);font-weight:500;line-height:1.5;word-break:break-word}
+.ib-val.mono{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+
+.track-strip{background:linear-gradient(135deg,rgba(0,212,240,.06),rgba(0,212,240,.02));border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:4px}
+.ts-label{font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.ts-event{font-size:13.5px;color:var(--white);font-weight:600;margin-bottom:4px}
+.ts-meta{font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.track-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:transparent;border:1px solid var(--border);color:var(--cyan);padding:9px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none;font-family:var(--font);transition:all .2s}
+.track-link:hover{background:var(--cyan2);border-color:var(--cyan)}
+.reset-btn{width:100%;margin-top:18px;padding:13px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.reset-btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan3)}
+
+/* ALL PACKAGES */
+.pkg-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+.toolbar-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.search-box input{background:transparent;border:none;outline:none;color:var(--white);font-family:var(--font);font-size:13px;padding:9px 14px;min-width:220px}
+.search-box input::placeholder{color:var(--muted)}
+.search-box button{background:var(--navy3);border:none;border-left:1px solid var(--border);color:var(--muted);padding:9px 13px;cursor:pointer;transition:color .2s}
+.search-box button:hover{color:var(--cyan)}
+.btn-ra{display:flex;align-items:center;gap:8px;background:var(--cyan);color:var(--navy);padding:9px 20px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-ra:hover{background:#00b8d4;transform:translateY(-1px)}
+.btn-ra:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.last-ref{font-size:11.5px;color:var(--muted)}
+
+.table-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;overflow-x:auto}
+.pkg-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px}
+.pkg-table thead{background:var(--navy3);position:sticky;top:114px;z-index:5}
+.pkg-table th{padding:12px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);white-space:nowrap}
+.pkg-table td{padding:13px 14px;border-bottom:1px solid var(--border2);color:var(--white);vertical-align:middle}
+.pkg-table tbody tr{transition:background .15s}
+.pkg-table tbody tr:hover{background:rgba(0,212,240,.04)}
+.pkg-table tbody tr:last-child td{border-bottom:none}
+.td-mono{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+.td-muted{color:var(--muted);font-size:12px}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.btn-rt{background:transparent;border:1px solid var(--border);color:var(--cyan);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .18s;white-space:nowrap}
+.btn-rt:hover{background:var(--cyan2);border-color:var(--cyan)}
+.btn-rt:disabled{opacity:.4;cursor:not-allowed}
+.empty-state{text-align:center;padding:60px 30px}
+.empty-state .ei{font-size:44px;margin-bottom:14px;display:block}
+.empty-state h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--muted)}
+.loading-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);z-index:999;background:var(--navy3);border:1px solid var(--border);color:var(--white);padding:12px 22px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.info{border-color:var(--cyan);color:var(--cyan)}
+
+/* LIGHT MODE */
+[data-theme="light"]{
+  --navy:#F0F5FA;--navy2:#FFFFFF;--navy3:#E8EFF7;
+  --white:#0D1B2A;--muted:#5A7A98;
+  --border:rgba(0,130,170,.15);--border2:rgba(0,130,170,.08);
+  --cyan3:rgba(0,160,190,.05);--cyan2:rgba(0,160,190,.1);
+}
+[data-theme="light"] body::before{background-image:linear-gradient(rgba(0,130,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,130,170,.04) 1px,transparent 1px)}
+[data-theme="light"] .ib{background:var(--navy3)}
+[data-theme="light"] .pkg-table tbody tr:hover{background:rgba(0,160,190,.04)}
+
+.spin{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:640px){
+  .header{padding:10px 16px}.logo-text h1{font-size:11px}
+  .wrap{padding:20px 14px 48px}
+  .info-grid{grid-template-columns:1fr 1fr}
+  .ib.w2{grid-column:span 2}.ib.w3{grid-column:span 2}
+  .tabs{padding:0 14px}.tab{padding:12px 14px;font-size:12px}
+}
+@media(max-width:420px){
+  .info-grid{grid-template-columns:1fr}
+  .ib.w2,.ib.w3{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-dots"><span></span><span></span><span></span></div>
+    <div class="logo-div"></div>
+    <div class="logo-text"><h1>INDIA BUSINESS INTERNATIONAL</h1><p>eCommerce for the World</p></div>
+  </div>
+  <div class="header-r">
+    <span class="app-title">Package Tracker</span>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab active" id="tab-upload" onclick="switchTab('upload')">📤 Upload &amp; Track</button>
+  <button class="tab" id="tab-packages" onclick="switchTab('packages')">
+    📦 All Packages <span class="tab-count" id="pkgCount">—</span>
+  </button>
+</nav>
+
+<!-- ════ PANEL 1: UPLOAD ════ -->
+<div class="panel active" id="panel-upload">
+<div class="wrap">
+
+  <div class="upload-zone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <div class="ai-pill">✦ Gemini AI Powered — Fully Automatic</div>
+    <span class="upload-icon">📄</span>
+    <h2>Drop Invoice or Shipping Label PDF</h2>
+    <p>AI will <strong>extract all details</strong> and <strong>track courier status automatically</strong><br>No manual typing required anywhere</p>
+    <div class="upload-formats">
+      <span class="fmt-tag">Amazon</span><span class="fmt-tag">Amazon Bazaar</span>
+      <span class="fmt-tag">Flipkart</span><span class="fmt-tag">Shopsy</span>
+      <span class="fmt-tag">Meesho</span><span class="fmt-tag">ShopClues</span>
+      <span class="fmt-tag">IBI Website</span>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" style="display:none">
+  </div>
+
+  <!-- Stepper -->
+  <div id="stepper">
+    <div class="step-card">
+      <div class="step-title">Processing</div>
+      <div class="steps">
+        <div class="step" id="step1"><div class="step-icon" id="si1">📤</div><div><div class="step-label">Reading PDF</div><div class="step-detail" id="sd1">Converting for AI…</div></div></div>
+        <div class="step" id="step2"><div class="step-icon" id="si2">🤖</div><div><div class="step-label">AI Extracting Details</div><div class="step-detail" id="sd2">Gemini analysing document…</div></div></div>
+        <div class="step" id="step3"><div class="step-icon" id="si3">🚚</div><div><div class="step-label">Tracking Courier Status</div><div class="step-detail" id="sd3">Checking live delivery status…</div></div></div>
+        <div class="step" id="step4"><div class="step-icon" id="si4">💾</div><div><div class="step-label">Saving to Google Sheet</div><div class="step-detail" id="sd4">Writing to database…</div></div></div>
+        <div class="step" id="step5"><div class="step-icon" id="si5">🎯</div><div><div class="step-label">Complete</div><div class="step-detail" id="sd5"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="resultCard">
+    <div class="result-wrap">
+      <div class="result-header">
+        <div class="result-hl">
+          <span class="pf-badge" id="r-pf">—</span>
+          <div class="courier-tag"><span class="cdot" id="r-cdot"></span><span id="r-courier">—</span></div>
+        </div>
+        <div class="status-big" id="r-status">—</div>
+      </div>
+      <div class="result-body">
+        <div class="info-grid">
+          <div class="ib"><div class="ib-label">Order ID</div><div class="ib-val mono" id="r-oid">—</div></div>
+          <div class="ib w2"><div class="ib-label">AWB / Tracking Number</div><div class="ib-val mono" id="r-awb">—</div></div>
+          <div class="ib"><div class="ib-label">Invoice Number</div><div class="ib-val mono" id="r-inv">—</div></div>
+          <div class="ib"><div class="ib-label">Ship Date</div><div class="ib-val" id="r-sd">—</div></div>
+          <div class="ib"><div class="ib-label">Expected Delivery</div><div class="ib-val" id="r-ed">—</div></div>
+          <div class="ib w2"><div class="ib-label">Buyer Name</div><div class="ib-val" id="r-bn">—</div></div>
+          <div class="ib"><div class="ib-label">Phone</div><div class="ib-val mono" id="r-ph">—</div></div>
+          <div class="ib w3"><div class="ib-label">Shipping Address</div><div class="ib-val" id="r-addr">—</div></div>
+          <div class="ib"><div class="ib-label">Pincode</div><div class="ib-val mono" id="r-pin">—</div></div>
+          <div class="ib w2"><div class="ib-label">Product / SKU</div><div class="ib-val" id="r-prod">—</div></div>
+          <div class="ib"><div class="ib-label">Qty</div><div class="ib-val" id="r-qty">—</div></div>
+          <div class="ib"><div class="ib-label">Amount (₹)</div><div class="ib-val" id="r-amt">—</div></div>
+          <div class="ib"><div class="ib-label">Payment Type</div><div class="ib-val" id="r-pay">—</div></div>
+        </div>
+        <div class="track-strip">
+          <div class="ts-label">📡 Courier Tracking Update</div>
+          <div class="ts-event" id="r-evt">—</div>
+          <div class="ts-meta"><span id="r-loc"></span><span id="r-tt"></span></div>
+          <a class="track-link" id="r-link" href="#" target="_blank" style="display:none">🔗 Open Courier Tracking Page ↗</a>
+        </div>
+        <button class="reset-btn" onclick="resetUpload()">↩ Upload Another PDF</button>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- ════ PANEL 2: ALL PACKAGES ════ -->
+<div class="panel" id="panel-packages">
+<div class="wrap">
+
+  <div class="pkg-toolbar">
+    <div class="toolbar-l">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search Order ID, AWB, Buyer…" oninput="filterTable()">
+        <button onclick="document.getElementById('searchInput').value='';filterTable()">✕</button>
+      </div>
+      <span class="last-ref" id="lastRef"></span>
+    </div>
+    <button class="btn-ra" id="btnRA" onclick="reTrackAll()">🔄 Refresh All Pending</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="pkg-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Platform</th><th>Order ID</th><th>AWB</th>
+          <th>Buyer</th><th>Amount</th><th>Exp. Delivery</th>
+          <th>Status</th><th>Last Tracked</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="pkgBody">
+        <tr class="loading-row"><td colspan="10">⏳ Loading packages…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS = 'https://script.google.com/macros/s/AKfycbyXUYYlBxM8FUsmblV4zk98zSw15DOVVqEKWTM6aVadHpZCByK5j-4f8T0nXAMxkDsYZQ/exec';
+
+/* ─ THEME ─ */
+(function(){
+  if(localStorage.getItem('ibi-pt')==='light'){
+    document.body.setAttribute('data-theme','light');
+    document.getElementById('themeBtn').innerText='🌙 Dark';
+  }
+})();
+function toggleTheme(){
+  const light = document.body.getAttribute('data-theme')==='light';
+  document.body.setAttribute('data-theme', light?'':'light');
+  if(!light) localStorage.setItem('ibi-pt','light'); else localStorage.removeItem('ibi-pt');
+  document.getElementById('themeBtn').innerText = light ? '🌙 Dark' : '☀️ Light';
+}
+
+/* ─ TABS ─ */
+function switchTab(id){
+  ['upload','packages'].forEach(t=>{
+    document.getElementById('panel-'+t).classList.toggle('active',t===id);
+    document.getElementById('tab-'+t).classList.toggle('active',t===id);
+  });
+  if(id==='packages') loadPackages();
+}
+
+/* ─ TOAST ─ */
+let _tt;
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+type+' show';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3800);
+}
+
+/* ─ DRAG & DROP ─ */
+const dz=document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0])});
+document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])processFile(e.target.files[0])});
+
+/* ─ PROCESS FILE ─ */
+function processFile(file){
+  if(file.type!=='application/pdf'){toast('Please upload a PDF file only.','err');return}
+  dz.style.display='none';
+  document.getElementById('stepper').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+  [1,2,3,4,5].forEach(i=>setStep(i,'pending'));
+
+  setStep(1,'active','Reading file…');
+  const reader=new FileReader();
+  reader.onload=function(e){
+    setStep(1,'done','File ready');
+    setStep(2,'active','Gemini AI extracting details from your PDF…');
+
+    const fd=new FormData();
+    fd.append('action','processPackage');
+    fd.append('pdfData',e.target.result.split(',')[1]);
+
+    fetch(GAS,{method:'POST',body:fd})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.status==='success'){
+          setStep(2,'done','All fields extracted successfully');
+          setStep(3,'done',d.data.trackingStatus||'Status fetched');
+          setStep(4,'done','Saved to Google Sheet');
+          setTimeout(()=>{
+            setStep(5,'done','Package tracked & saved!');
+            showResult(d.data);
+            refreshCount();
+          },500);
+        } else {
+          const fs=d.failedAt||2;
+          setStep(fs,'error',d.message||'Error occurred');
+          toast('Error: '+(d.message||'Unknown'),'err');
+        }
+      })
+      .catch(()=>{setStep(2,'error','Network error — check connection');toast('Network error. Try again.','err')});
+  };
+  reader.readAsDataURL(file);
+}
+
+function setStep(n,state,detail){
+  const el=document.getElementById('step'+n);
+  el.className='step '+state;
+  if(detail) document.getElementById('sd'+n).textContent=detail;
+  const ICONS={pending:['📤','🤖','🚚','💾','🎯'],active:'⏳',done:'✅',error:'❌'};
+  document.getElementById('si'+n).textContent = state==='pending'?ICONS.pending[n-1]:ICONS[state];
+}
+
+/* ─ STATUS HELPERS ─ */
+const PF_CLS={'Amazon':'pf-amazon','Amazon Bazaar':'pf-amazon','Flipkart':'pf-flipkart','Shopsy':'pf-flipkart','Meesho':'pf-meesho','ShopClues':'pf-shopclues','IBI Website':'pf-ibi'};
+const CD_CLS={'Amazon Transportation Services':'cd-amazon','eKart Logistics':'cd-ekart','Delhivery':'cd-delhivery'};
+function sCls(s){
+  s=(s||'').toLowerCase();
+  if(s.includes('delivered')&&!s.includes('rto')&&!s.includes('return'))return'sb-delivered';
+  if(s.includes('out for'))return'sb-ofd';
+  if(s.includes('rto')||s.includes('return')||s.includes('reject'))return'sb-rto';
+  if(s.includes('ndr')||s.includes('attempt')||s.includes('undeliver')||s.includes('incomplete'))return'sb-ndr';
+  if(s.includes('transit')||s.includes('ship')||s.includes('dispatch'))return'sb-transit';
+  return'sb-unknown';
+}
+function sIcon(s){
+  s=(s||'').toLowerCase();
+  if(s.includes('delivered')&&!s.includes('rto'))return'✅';
+  if(s.includes('out for'))return'🚴';
+  if(s.includes('rto')||s.includes('return'))return'🔴';
+  if(s.includes('attempt')||s.includes('ndr'))return'🟠';
+  if(s.includes('transit')||s.includes('ship'))return'📦';
+  return'⏳';
+}
+
+/* ─ SHOW RESULT ─ */
+function showResult(d){
+  document.getElementById('stepper').style.display='none';
+  document.getElementById('resultCard').style.display='block';
+
+  const pf=document.getElementById('r-pf');
+  pf.textContent=d.platform||'—'; pf.className='pf-badge '+(PF_CLS[d.platform]||'pf-ibi');
+  document.getElementById('r-courier').textContent=d.courier||'—';
+  const cd=document.getElementById('r-cdot');
+  cd.className='cdot '+(CD_CLS[d.courier]||'cd-delhivery');
+
+  const sb=document.getElementById('r-status');
+  sb.innerHTML=sIcon(d.trackingStatus)+' '+(d.trackingStatus||'Unknown');
+  sb.className='status-big '+(sCls(d.trackingStatus));
+
+  const F={
+    'r-oid':d.orderId,'r-awb':d.awb,'r-inv':d.invoiceNo,
+    'r-sd':d.shipDate,'r-ed':d.expectedDelivery,
+    'r-bn':d.buyerName,'r-ph':d.buyerPhone,'r-addr':d.shippingAddress,
+    'r-pin':d.pincode,'r-prod':d.products,'r-qty':d.qty,
+    'r-amt':d.amount?'₹'+d.amount:'—','r-pay':d.payType
+  };
+  Object.entries(F).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=(val&&String(val).trim())?val:'—';
+  });
+
+  document.getElementById('r-evt').textContent=d.statusDetail||d.trackingStatus||'No details available';
+  document.getElementById('r-loc').textContent=d.lastLocation?'📍 '+d.lastLocation:'';
+  document.getElementById('r-tt').textContent=d.lastEventTime?'🕐 '+d.lastEventTime:'';
+
+  const lnk=document.getElementById('r-link');
+  if(d.trackUrl){lnk.href=d.trackUrl;lnk.style.display='inline-flex';}
+  else{lnk.style.display='none';}
+
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('✅ Package tracked & saved to database!','ok');
+}
+
+function resetUpload(){
+  dz.style.display='';
+  document.getElementById('stepper').style.display='none';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('fileInput').value='';
+  dz.scrollIntoView({behavior:'smooth'});
+}
+
+/* ─ LOAD ALL PACKAGES ─ */
+let allPkgs=[];
+function loadPackages(){
+  document.getElementById('pkgBody').innerHTML='<tr class="loading-row"><td colspan="10">⏳ Loading packages…</td></tr>';
+  const fd=new FormData(); fd.append('action','loadPackages');
+  fetch(GAS,{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='success'){
+        allPkgs=d.data||[];
+        renderTable(allPkgs);
+        document.getElementById('pkgCount').textContent=allPkgs.length||'0';
+        document.getElementById('lastRef').textContent='Updated '+new Date().toLocaleTimeString('en-IN');
+      } else {
+        document.getElementById('pkgBody').innerHTML=`<tr class="loading-row"><td colspan="10">⚠️ ${d.message||'Failed to load'}</td></tr>`;
+      }
+    })
+    .catch(()=>{document.getElementById('pkgBody').innerHTML='<tr class="loading-row"><td colspan="10">❌ Network error</td></tr>'});
+}
+
+function refreshCount(){
+  const fd=new FormData(); fd.append('action','loadPackages');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success') document.getElementById('pkgCount').textContent=(d.data||[]).length;
+  }).catch(()=>{});
+}
+
+function renderTable(rows){
+  const tbody=document.getElementById('pkgBody');
+  if(!rows||!rows.length){
+    tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><span class="ei">📦</span><h3>No packages yet</h3><p>Upload a PDF in the Upload &amp; Track tab to get started</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map((r,i)=>`
+    <tr id="pr-${r.rowIndex}">
+      <td class="td-muted">${i+1}</td>
+      <td><span class="pf-badge ${PF_CLS[r.platform]||'pf-ibi'}" style="padding:2px 9px;font-size:10.5px">${r.platform||'—'}</span></td>
+      <td class="td-mono">${r.orderId||'—'}</td>
+      <td class="td-mono">${r.awb||'—'}</td>
+      <td>${r.buyerName||'—'}</td>
+      <td class="td-muted">${r.amount?'₹'+r.amount:'—'} <small>${r.payType||''}</small></td>
+      <td class="td-muted">${r.expectedDelivery||r.shipDate||'—'}</td>
+      <td><span class="status-pill ${sCls(r.status)}">${sIcon(r.status)} ${r.status||'Unknown'}</span></td>
+      <td class="td-muted" style="font-size:11px">${r.lastTracked||'—'}</td>
+      <td><button class="btn-rt" id="rt-${r.rowIndex}" onclick="reTrackOne(${r.rowIndex},this)">🔄 Retrack</button></td>
+    </tr>`).join('');
+}
+
+function filterTable(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  if(!q){renderTable(allPkgs);return}
+  renderTable(allPkgs.filter(r=>
+    (r.orderId||'').toLowerCase().includes(q)||
+    (r.awb||'').toLowerCase().includes(q)||
+    (r.buyerName||'').toLowerCase().includes(q)||
+    (r.platform||'').toLowerCase().includes(q)||
+    (r.status||'').toLowerCase().includes(q)
+  ));
+}
+
+/* ─ RETRACK ONE ─ */
+function reTrackOne(rowIndex,btn){
+  btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span>';
+  const fd=new FormData(); fd.append('action','reTrack'); fd.append('rowIndex',rowIndex);
+  fetch(GAS,{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='success'){
+        const pkg=allPkgs.find(p=>p.rowIndex===rowIndex);
+        if(pkg&&d.data){pkg.status=d.data.status||pkg.status;pkg.lastTracked=d.data.lastTracked||pkg.lastTracked}
+        const tr=document.getElementById('pr-'+rowIndex);
+        if(tr&&d.data){
+          tr.cells[7].innerHTML=`<span class="status-pill ${sCls(d.data.status)}">${sIcon(d.data.status)} ${d.data.status||'Unknown'}</span>`;
+          tr.cells[8].textContent=d.data.lastTracked||'—';
+        }
+        toast('Status updated ✓','ok');
+      } else toast(d.message||'Retrack failed','err');
+    })
+    .catch(()=>toast('Network error','err'))
+    .finally(()=>{btn.disabled=false;btn.innerHTML='🔄 Retrack'});
+}
+
+/* ─ RETRACK ALL ─ */
+function reTrackAll(){
+  const btn=document.getElementById('btnRA');
+  btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Refreshing…';
+  toast('Refreshing all pending packages…','info');
+  const fd=new FormData(); fd.append('action','reTrackAll');
+  fetch(GAS,{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='success'){toast(`Updated ${d.updated||0} package(s) ✓`,'ok');loadPackages();}
+      else toast(d.message||'Failed','err');
+    })
+    .catch(()=>toast('Network error','err'))
+    .finally(()=>{btn.disabled=false;btn.innerHTML='🔄 Refresh All Pending'});
+}
+</script>
+</body>
+</html>
