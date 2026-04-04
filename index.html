@@ -5,1032 +5,272 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IBI Database</title>
     <style>
-        /* ── IBI Brand Tokens ── */
         :root {
-            --navy:        #0D1B2A;
-            --navy-light:  #122133;
-            --navy-card:   #162c42;
-            --cyan:        #00D4F0;
-            --cyan-dim:    rgba(0,212,240,0.12);
-            --cyan-glow:   rgba(0,212,240,0.30);
-            /* Content area tokens */
-            --bg:          #f1f5f9;
-            --surface:     #ffffff;
-            --text:        #0f172a;
-            --text-muted:  #64748b;
-            --border:      #e2e8f0;
-            --primary:     #2563eb;
-            --primary-h:   #1d4ed8;
-            --accent:      #ef4444;
-            --accent-h:    #dc2626;
+            --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --border: #e2e8f0;
+            --primary: #2563eb; --primary-hover: #1d4ed8; --accent: #10b981;
+            --dropzone-bg: #eff6ff; --dropzone-border: #93c5fd;
         }
         [data-theme="dark"] {
-            --bg:          #0f172a;
-            --surface:     #1e293b;
-            --text:        #f1f5f9;
-            --text-muted:  #94a3b8;
-            --border:      #334155;
-            --primary:     #3b82f6;
-            --primary-h:   #2563eb;
+            --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --border: #334155;
+            --primary: #3b82f6; --primary-hover: #2563eb; --accent: #059669;
+            --dropzone-bg: #0f172a; --dropzone-border: #475569;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--navy);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        /* ───────────────────────────────────────
-           HEADER
-        ─────────────────────────────────────── */
-        .app-header {
-            background: var(--navy);
-            padding: 14px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 2px solid var(--cyan);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-circles { display: flex; gap: 4px; align-items: flex-end; }
-        .logo-circles span { background: var(--cyan); border-radius: 50%; display: block; }
-        .logo-circles span:nth-child(1) { width: 7px;  height: 7px;  opacity: 0.35; }
-        .logo-circles span:nth-child(2) { width: 10px; height: 10px; opacity: 0.65; }
-        .logo-circles span:nth-child(3) { width: 14px; height: 14px; }
-        .logo-divider { width: 2px; height: 32px; background: var(--cyan); opacity: 0.45; }
-        .logo-text h1 { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.5px; line-height: 1.2; }
-        .logo-text p  { font-size: 9.5px; color: var(--cyan); font-style: italic; letter-spacing: 1.2px; }
-
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .db-label { color: var(--cyan); font-weight: 800; font-size: 17px; letter-spacing: 0.5px; }
-        .theme-btn {
-            background: transparent;
-            border: 1px solid rgba(0,212,240,0.4);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .theme-btn:hover { border-color: var(--cyan); }
-
-        /* ───────────────────────────────────────
-           TAB NAV
-        ─────────────────────────────────────── */
-        .tab-nav {
-            background: var(--navy-light);
-            display: flex;
-            gap: 4px;
-            padding: 0 24px;
-            border-bottom: 1px solid rgba(0,212,240,0.18);
-        }
-        .tab-btn {
-            padding: 13px 20px;
-            font-size: 13.5px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.45);
-            border: none;
-            background: none;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            letter-spacing: 0.3px;
-        }
-        .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-        .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.75); }
-
-        /* ───────────────────────────────────────
-           TAB CONTENT WRAPPER
-        ─────────────────────────────────────── */
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        .content-wrap {
-            background: var(--bg);
-            min-height: calc(100vh - 112px);
-            padding: 28px 20px 48px;
-            display: flex;
-            justify-content: center;
-        }
-        .container { width: 100%; max-width: 880px; }
-
-        /* ───────────────────────────────────────
-           MODE PILLS
-        ─────────────────────────────────────── */
-        .mode-pills { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .mode-pill {
-            padding: 9px 20px;
-            border-radius: 22px;
-            border: 2px solid var(--border);
-            background: var(--surface);
-            color: var(--text-muted);
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .mode-pill.active {
-            background: var(--navy);
-            color: var(--cyan);
-            border-color: var(--cyan);
-            box-shadow: 0 0 12px var(--cyan-glow);
-        }
-
-        /* ───────────────────────────────────────
-           CARDS
-        ─────────────────────────────────────── */
-        .card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 28px 30px;
-            box-shadow: 0 4px 22px rgba(0,0,0,0.07);
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-size: 11.5px;
-            font-weight: 800;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            margin: 26px 0 13px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 6px;
-        }
-        .section-title:first-child { margin-top: 0; }
-
-        /* ───────────────────────────────────────
-           FORMS
-        ─────────────────────────────────────── */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: background-color 0.3s, color 0.3s; }
+        .container { width: 100%; max-width: 800px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background-color: var(--surface); border-radius: 16px; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid var(--border); margin-bottom: 20px;}
+        
+        .dropzone { border: 2px dashed var(--dropzone-border); background-color: var(--dropzone-bg); border-radius: 12px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; position: relative;}
+        .dropzone.dragover { border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1); transform: scale(1.02); }
+        .dropzone p { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); opacity: 0.8; }
+        .ai-badge { position: absolute; top: 10px; right: 10px; background: linear-gradient(135deg, #a855f7, #3b82f6); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;}
+        
+        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 15px 0; border-bottom: 2px solid var(--border); padding-bottom: 5px;}
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
-        .form-group.col-2 { grid-column: span 2; }
-        .form-group.col-3 { grid-column: span 3; }
+        .form-group.col-span-2 { grid-column: span 2; }
+        .form-group.col-span-3 { grid-column: span 3; }
+        
+        label { margin-bottom: 6px; font-size: 12px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--bg); color: var(--text); font-size: 14px; font-weight: 500; outline: none; transition: border-color 0.2s; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 70px; }
 
-        label {
-            margin-bottom: 5px;
-            font-size: 10.5px;
-            font-weight: 800;
-            opacity: 0.65;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-        input, select, textarea {
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 13.5px;
-            outline: none;
-            font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-        }
-        input[readonly] { opacity: 0.55; cursor: not-allowed; background: var(--border); }
-        textarea { resize: vertical; min-height: 68px; }
+        button.submit-btn { width: 100%; padding: 18px; font-size: 16px; font-weight: bold; color: white; background-color: var(--accent); border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; margin-top: 30px; }
+        button.submit-btn:hover { opacity: 0.9; }
+        button.submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* ───────────────────────────────────────
-           COURIER & STATUS BADGES
-        ─────────────────────────────────────── */
-        .courier-badge {
-            display: inline-block;
-            margin-top: 7px;
-            padding: 3px 11px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-        }
-        .c-amazon    { background: #fef3c7; color: #92400e; }
-        .c-ekart     { background: #dbeafe; color: #1e40af; }
-        .c-delhivery { background: #dcfce7; color: #166534; }
-
-        .status-pill {
-            display: inline-block;
-            padding: 3px 11px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 800;
-        }
-        .sp-transit    { background: #dbeafe; color: #1e40af; }
-        .sp-ofd        { background: #fef3c7; color: #92400e; }
-        .sp-delivered  { background: #dcfce7; color: #166534; }
-        .sp-rto        { background: #fee2e2; color: #991b1b; }
-        .sp-ndr        { background: #fce7f3; color: #9d174d; }
-        .sp-attempted  { background: #e0e7ff; color: #3730a3; }
-        .sp-stuck      { background: #fef9c3; color: #713f12; }
-        .sp-lost       { background: #f3f4f6; color: #374151; }
-
-        /* ───────────────────────────────────────
-           SEARCH RESULTS
-        ─────────────────────────────────────── */
-        .search-bar { display: flex; gap: 10px; align-items: flex-end; }
-        .search-bar .form-group { flex: 1; margin: 0; }
-        .btn-search {
-            padding: 10px 22px;
-            background: var(--navy);
-            color: var(--cyan);
-            border: 2px solid var(--cyan);
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
-        .btn-search:hover { background: var(--navy-light); }
-
-        .result-card {
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .result-card:hover { border-color: var(--primary); background: #eff6ff; }
-        .result-card.selected { border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
-        [data-theme="dark"] .result-card:hover { background: #1a2942; }
-        [data-theme="dark"] .result-card.selected { background: #1a2942; }
-
-        .rc-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .rc-head strong { font-size: 14px; }
-        .rc-meta {
-            margin-top: 7px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* Update panel */
-        #updatePanel {
-            display: none;
-            margin-top: 22px;
-            border-top: 2px dashed var(--border);
-            padding-top: 22px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 6px;
-        }
-        .info-item .i-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-item .i-val   { font-size: 13.5px; color: var(--text); margin-top: 2px; }
-
-        /* ───────────────────────────────────────
-           BUTTONS
-        ─────────────────────────────────────── */
-        .btn-primary {
-            padding: 12px 24px;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13.5px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-primary:hover { background: var(--primary-h); }
-
-        .btn-save {
-            width: 100%;
-            padding: 16px;
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--cyan);
-            background: var(--navy);
-            border: 2px solid var(--cyan);
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 24px;
-            letter-spacing: 0.5px;
-            transition: background 0.2s, box-shadow 0.2s;
-        }
-        .btn-save:hover { background: var(--navy-light); box-shadow: 0 0 16px var(--cyan-glow); }
-        .btn-save:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
-
-        .btn-flag {
-            width: 100%;
-            padding: 16px;
-            font-size: 15px;
-            font-weight: 800;
-            color: #fff;
-            background: var(--accent);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 24px;
-            transition: background 0.2s;
-        }
-        .btn-flag:hover { background: var(--accent-h); }
-        .btn-flag:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* ───────────────────────────────────────
-           STATUS MESSAGES
-        ─────────────────────────────────────── */
-        .msg-box {
-            margin-top: 14px;
-            padding: 12px 16px;
-            border-radius: 9px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 14px;
-            display: none;
-        }
-        .msg-success { background: #dcfce7; color: #166534; display: block !important; }
-        .msg-error   { background: #fee2e2; color: #991b1b; display: block !important; }
-        .msg-info    { background: #e0f2fe; color: #0369a1; display: block !important; }
-        .msg-gemini  { background: #f3e8ff; color: #7e22ce; display: block !important; border: 1px solid #d8b4fe; }
-
-        /* ───────────────────────────────────────
-           DROPZONE (Fake Buyers)
-        ─────────────────────────────────────── */
-        .dropzone {
-            border: 2px dashed #93c5fd;
-            background: #eff6ff;
-            border-radius: 12px;
-            padding: 28px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 12px;
-            position: relative;
-        }
-        [data-theme="dark"] .dropzone { background: #1e2e45; border-color: #334155; }
-        .dropzone.dragover { border-color: var(--primary); transform: scale(1.01); }
-        .dropzone p { margin: 0; font-size: 15px; font-weight: 600; opacity: 0.8; }
-        .ai-badge {
-            position: absolute; top: 10px; right: 12px;
-            background: linear-gradient(135deg, #a855f7, #3b82f6);
-            color: #fff; padding: 4px 10px; border-radius: 12px;
-            font-size: 10.5px; font-weight: 800;
-        }
-
-        /* ───────────────────────────────────────
-           RESPONSIVE
-        ─────────────────────────────────────── */
-        @media (max-width: 640px) {
-            .form-grid { grid-template-columns: 1fr 1fr; }
-            .form-group.col-3 { grid-column: span 2; }
-            .info-grid { grid-template-columns: 1fr; }
-            .content-wrap { padding: 16px 12px 40px; }
-            .card { padding: 20px 16px; }
-            .logo-text h1 { font-size: 13px; }
-            .db-label { font-size: 14px; }
-        }
-        @media (max-width: 400px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.col-2, .form-group.col-3 { grid-column: span 1; }
-        }
+        #status { margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; display: none; }
+        .status-success { background-color: #dcfce7; color: #166534; display: block !important; }
+        .status-error { background-color: #fee2e2; color: #991b1b; display: block !important; }
+        .status-info { background-color: #e0f2fe; color: #0369a1; display: block !important; }
+        .status-gemini { background-color: #f3e8ff; color: #7e22ce; display: block !important; border: 1px solid #d8b4fe; }
     </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     HEADER
-════════════════════════════════════════ -->
-<header class="app-header">
-    <div class="logo">
-        <div class="logo-circles"><span></span><span></span><span></span></div>
-        <div class="logo-divider"></div>
-        <div class="logo-text">
-            <h1>INDIA BUSINESS INTERNATIONAL</h1>
-            <p>eCommerce for the World</p>
-        </div>
-    </div>
-    <div class="header-right">
-        <span class="db-label">IBI Database</span>
-        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
-    </div>
-</header>
-
-<!-- ════════════════════════════════════════
-     TAB NAVIGATION
-════════════════════════════════════════ -->
-<nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('tracker', this)">📦 Package Tracker</button>
-    <button class="tab-btn"        onclick="switchTab('fakebuyers', this)">🚩 Fake Buyers DB</button>
-</nav>
-
-
-<!-- ════════════════════════════════════════
-     TAB 1 — PACKAGE TRACKER
-════════════════════════════════════════ -->
-<div id="tab-tracker" class="tab-panel active">
-<div class="content-wrap">
-<div class="container">
-
-    <div class="mode-pills">
-        <button class="mode-pill active" id="pill-add"    onclick="switchMode('add')">➕ Add New Package</button>
-        <button class="mode-pill"        id="pill-update" onclick="switchMode('update')">🔍 Track &amp; Update Status</button>
-    </div>
-
-    <!-- ── ADD NEW PACKAGE ── -->
-    <div id="mode-add">
-    <div class="card">
-
-        <div class="section-title">1. Platform &amp; Courier</div>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Platform *</label>
-                <select id="t-platform" onchange="setCourier()">
-                    <option value="">— Select Platform —</option>
-                    <option value="Amazon">Amazon</option>
-                    <option value="Amazon Bazaar">Amazon Bazaar</option>
-                    <option value="Flipkart">Flipkart</option>
-                    <option value="Shopsy">Shopsy</option>
-                    <option value="Meesho">Meesho</option>
-                    <option value="ShopClues">ShopClues</option>
-                    <option value="IBI Website">IBI Website</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Courier Partner (Auto)</label>
-                <input type="text" id="t-courier" readonly placeholder="Auto-assigned on platform select">
-                <span id="t-courierBadge" style="display:none;"></span>
-            </div>
-            <div class="form-group">
-                <label>Payment Type</label>
-                <select id="t-paymentType">
-                    <option value="COD">Cash on Delivery (COD)</option>
-                    <option value="Prepaid">Prepaid</option>
-                </select>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin:0; font-size: 24px;">IBI Database</h2>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
         </div>
 
-        <div class="section-title">2. Shipment Details</div>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Order ID *</label>
-                <input type="text" id="t-orderId" placeholder="Platform Order ID">
+        <div class="card">
+            <div class="dropzone" id="dropzone">
+                <span class="ai-badge">✨ Gemini AI Powered</span>
+                <p>📄 Drag & Drop Invoice/Label PDF Here</p>
+                <input type="file" id="fileInput" accept="application/pdf" style="display: none;">
             </div>
-            <div class="form-group col-2">
-                <label>AWB / Tracking Number *</label>
-                <input type="text" id="t-awb" placeholder="Airway Bill / Tracking No.">
-            </div>
-            <div class="form-group">
-                <label>Invoice Number</label>
-                <input type="text" id="t-invoiceNumber">
-            </div>
-            <div class="form-group">
-                <label>Ship Date</label>
-                <input type="text" id="t-shipDate" placeholder="DD/MM/YYYY">
-            </div>
-            <div class="form-group">
-                <label>Expected Delivery</label>
-                <input type="text" id="t-expectedDelivery" placeholder="DD/MM/YYYY">
-            </div>
-        </div>
+            <div id="status"></div>
 
-        <div class="section-title">3. Buyer &amp; Product</div>
-        <div class="form-grid">
-            <div class="form-group col-2">
-                <label>Buyer Name</label>
-                <input type="text" id="t-buyerName">
-            </div>
-            <div class="form-group">
-                <label>Pincode</label>
-                <input type="text" id="t-pincode">
-            </div>
-            <div class="form-group col-3">
-                <label>Product(s) / SKU</label>
-                <textarea id="t-products" style="min-height:56px;" placeholder="Product name, SKU, or description"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Quantity</label>
-                <input type="number" id="t-qty" value="1" min="1">
-            </div>
-            <div class="form-group">
-                <label>Order Amount (₹)</label>
-                <input type="number" id="t-amount" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Initial Status</label>
-                <select id="t-initStatus">
-                    <option value="Shipped">Shipped</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
-                </select>
-            </div>
-        </div>
-
-        <button class="btn-save" id="t-addBtn" onclick="addPackage()">📦 Save Package to Tracker</button>
-        <div id="addMsg" class="msg-box"></div>
-
-    </div>
-    </div><!-- /mode-add -->
-
-    <!-- ── TRACK & UPDATE ── -->
-    <div id="mode-update" style="display:none;">
-    <div class="card">
-
-        <p style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">
-            Search by <strong>Order ID</strong> or <strong>AWB / Tracking Number</strong>. Select a result to update its delivery status — the record in Google Sheets updates in-place (no duplicate rows).
-        </p>
-
-        <div class="search-bar">
-            <div class="form-group">
-                <label>Order ID or AWB / Tracking Number</label>
-                <input type="text" id="searchQuery" placeholder="e.g. 405-XXXXXXX-XXXXXXX or 1234567890">
-            </div>
-            <button class="btn-search" onclick="searchPackage()">🔍 Search</button>
-        </div>
-
-        <div id="searchHint" style="margin-top:10px; font-size:13px; color:var(--text-muted);"></div>
-        <div id="searchResults" style="margin-top:16px;"></div>
-
-        <!-- Update Panel (shown after selecting a result) -->
-        <div id="updatePanel">
-
-            <div class="section-title">📋 Current Package Info</div>
-            <div class="info-grid" id="currentInfo"></div>
-
-            <div class="section-title">✏️ Update Delivery Status</div>
+            <div class="section-title">1. Order Information</div>
             <div class="form-grid">
-                <div class="form-group col-2">
-                    <label>New Status *</label>
-                    <select id="newStatus">
-                        <option value="Shipped">📦 Shipped</option>
-                        <option value="In Transit">🔵 In Transit</option>
-                        <option value="Out for Delivery">🟡 Out for Delivery</option>
-                        <option value="Delivered">✅ Delivered</option>
-                        <option value="RTO Initiated">🔴 RTO Initiated</option>
-                        <option value="RTO in Transit">🔴 RTO In Transit</option>
-                        <option value="RTO Delivered">🔴 RTO Delivered (Back to Seller)</option>
-                        <option value="NDR - Pending">🟠 NDR – Delivery Pending</option>
-                        <option value="Attempted Delivery">🟠 Attempted Delivery (Not Home)</option>
-                        <option value="Undeliverable - Address">❌ Undeliverable – Incomplete Address</option>
-                        <option value="Undeliverable - Rejected">❌ Rejected by Buyer</option>
-                        <option value="Undeliverable - No Response">❌ No Response from Buyer</option>
-                        <option value="Stuck / Held at Hub">⏸ Stuck / Held at Hub</option>
-                        <option value="Lost in Transit">⚠️ Lost in Transit</option>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="platform">
+                        <option value="Unknown">-- Select --</option>
+                        <option value="Amazon">Amazon</option>
+                        <option value="Amazon Bazaar">Amazon Bazaar</option>
+                        <option value="Flipkart">Flipkart</option>
+                        <option value="Shopsy">Shopsy</option>
+                        <option value="Meesho">Meesho</option>
+                        <option value="ShopClues">ShopClues</option>
+                        <option value="IBI Website">IBI Website</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Order ID</label><input type="text" id="orderId"></div>
+                <div class="form-group"><label>Invoice Number</label><input type="text" id="invoiceNumber"></div>
+                <div class="form-group"><label>Invoice Date</label><input type="text" id="invoiceDate" placeholder="DD/MM/YYYY"></div>
+                <div class="form-group"><label>Order Date</label><input type="text" id="orderDate" placeholder="DD/MM/YYYY"></div>
+                <div class="form-group"><label>Ship Date</label><input type="text" id="shipDate" placeholder="DD/MM/YYYY"></div>
+            </div>
+
+            <div class="section-title">2. Customer Details</div>
+            <div class="form-grid">
+                <div class="form-group col-span-2"><label>Buyer Name</label><input type="text" id="buyerName"></div>
+                <div class="form-group"><label>Phone Number</label><input type="text" id="phone"></div>
+                <div class="form-group col-span-3"><label>Shipping Address</label><textarea id="shippingAddr"></textarea></div>
+                <div class="form-group col-span-2"><label>Billing Address</label><textarea id="billingAddr"></textarea></div>
+                <div class="form-group"><label>Pincode</label><input type="text" id="pincode"></div>
+            </div>
+
+            <div class="section-title">3. Logistics & Tracking</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Courier Service</label>
+                    <select id="courier">
+                        <option value="Unknown">-- Select Courier --</option>
+                        <option value="Amazon ATS">Amazon ATS</option>
+                        <option value="eKart">eKart</option>
+                        <option value="Delhivery">Delhivery</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group col-span-2"><label>AWB / Tracking Number</label><input type="text" id="awb"></div>
+                <div class="form-group">
+                    <label>Package Status</label>
+                    <select id="packageStatus">
+                        <option value="Processing">Processing</option>
+                        <option value="Dispatched">Dispatched</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="RTO Initiated">RTO Initiated</option>
+                        <option value="Returned to Seller">Returned to Seller</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Status Date (optional)</label>
-                    <input type="text" id="updateDate" placeholder="DD/MM/YYYY">
+                    <label>Payment Type</label>
+                    <select id="paymentType">
+                        <option value="COD">COD</option>
+                        <option value="Prepaid">Prepaid</option>
+                    </select>
                 </div>
-                <div class="form-group col-3">
-                    <label>Remarks / Reason</label>
-                    <textarea id="updateRemarks" style="min-height:62px;" placeholder="e.g. Buyer refused delivery, address incomplete, delivered to neighbour…"></textarea>
+                <div class="form-group"><label>Total Amount (₹)</label><input type="number" id="totalAmount"></div>
+                <div class="form-group col-span-2"><label>Product(s) Purchased / SKU</label><textarea id="products"></textarea></div>
+                <div class="form-group"><label>Total Quantity</label><input type="number" id="qty"></div>
+                <div class="form-group">
+                    <label>Fraud / Flag Reason</label>
+                    <select id="fraudReason">
+                        <option value="None">None / Safe Buyer</option>
+                        <option value="High Risk RTO">High Risk RTO (Rejected)</option>
+                        <option value="Fake Address">Fake / Invalid Address</option>
+                        <option value="Empty Box Return">Empty Box / Fraud Return</option>
+                        <option value="Used Item Return">Used / Damaged Return</option>
+                    </select>
                 </div>
             </div>
-            <input type="hidden" id="selectedRowIndex">
 
-            <button class="btn-save" id="updateBtn" onclick="doUpdateStatus()">💾 Update Status in Database</button>
-            <div id="updateMsg" class="msg-box"></div>
-
-        </div><!-- /updatePanel -->
-
-    </div>
-    </div><!-- /mode-update -->
-
-</div><!-- /container -->
-</div><!-- /content-wrap -->
-</div><!-- /tab-tracker -->
-
-
-<!-- ════════════════════════════════════════
-     TAB 2 — FAKE BUYERS DB
-════════════════════════════════════════ -->
-<div id="tab-fakebuyers" class="tab-panel">
-<div class="content-wrap">
-<div class="container">
-<div class="card">
-
-    <div class="dropzone" id="dropzone">
-        <span class="ai-badge">✨ Gemini AI Powered</span>
-        <p>📄 Drag &amp; Drop Invoice / Label PDF Here</p>
-        <input type="file" id="fileInput" accept="application/pdf" style="display:none;">
-    </div>
-    <div id="fbMsg" class="msg-box"></div>
-
-    <div class="section-title">1. Order Information</div>
-    <div class="form-grid">
-        <div class="form-group">
-            <label>Platform</label>
-            <select id="fb-platform">
-                <option value="Unknown">— Select —</option>
-                <option value="Amazon">Amazon</option>
-                <option value="Amazon Bazaar">Amazon Bazaar</option>
-                <option value="Flipkart">Flipkart</option>
-                <option value="Shopsy">Shopsy</option>
-                <option value="Meesho">Meesho</option>
-                <option value="ShopClues">ShopClues</option>
-                <option value="IBI Website">IBI Website</option>
-            </select>
-        </div>
-        <div class="form-group"><label>Order ID</label><input type="text" id="fb-orderId"></div>
-        <div class="form-group"><label>Invoice Number</label><input type="text" id="fb-invoiceNumber"></div>
-        <div class="form-group"><label>Invoice Date</label><input type="text" id="fb-invoiceDate" placeholder="DD/MM/YYYY"></div>
-        <div class="form-group"><label>Order Date</label><input type="text" id="fb-orderDate" placeholder="DD/MM/YYYY"></div>
-        <div class="form-group"><label>Ship Date</label><input type="text" id="fb-shipDate" placeholder="DD/MM/YYYY"></div>
-    </div>
-
-    <div class="section-title">2. Customer &amp; Address Details</div>
-    <div class="form-grid">
-        <div class="form-group col-2"><label>Buyer Name</label><input type="text" id="fb-buyerName"></div>
-        <div class="form-group"><label>Phone Number</label><input type="text" id="fb-phone"></div>
-        <div class="form-group col-3"><label>Shipping Address</label><textarea id="fb-shippingAddr"></textarea></div>
-        <div class="form-group col-2"><label>Billing Address</label><textarea id="fb-billingAddr"></textarea></div>
-        <div class="form-group"><label>Pincode</label><input type="text" id="fb-pincode"></div>
-    </div>
-
-    <div class="section-title">3. Logistics &amp; Financials</div>
-    <div class="form-grid">
-        <div class="form-group col-2"><label>AWB / Tracking Number</label><input type="text" id="fb-awb"></div>
-        <div class="form-group">
-            <label>Payment Type</label>
-            <select id="fb-paymentType">
-                <option value="COD">Cash on Delivery (COD)</option>
-                <option value="Prepaid">Prepaid</option>
-            </select>
-        </div>
-        <div class="form-group col-3"><label>Product(s) Purchased / SKU</label><textarea id="fb-products"></textarea></div>
-        <div class="form-group"><label>Total Quantity</label><input type="number" id="fb-qty"></div>
-        <div class="form-group"><label>Total Amount (₹)</label><input type="number" id="fb-totalAmount"></div>
-        <div class="form-group">
-            <label>Fraud / Flag Reason</label>
-            <select id="fb-fraudReason">
-                <option value="High Risk RTO">High Risk RTO (Rejected)</option>
-                <option value="Fake Address">Fake / Invalid Address</option>
-                <option value="Empty Box Return">Empty Box / Fraud Return</option>
-                <option value="Used Item Return">Used / Damaged Return</option>
-                <option value="Other">Other</option>
-            </select>
+            <button class="submit-btn" id="submitBtn" onclick="submitData()">Save / Update Database Record</button>
         </div>
     </div>
 
-    <button class="btn-flag" id="fb-submitBtn" onclick="submitFakeBuyer()">🚩 Flag Buyer &amp; Save to Database</button>
-    <div id="fbMsg2" class="msg-box"></div>
+    <script>
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light'; }
+        function toggleTheme() {
+            if (document.body.getAttribute('data-theme') === 'dark') { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); document.getElementById('themeBtn').innerText = '🌙 Dark'; } 
+            else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light'; }
+        }
 
-</div>
-</div><!-- /content-wrap -->
-</div><!-- /container -->
-</div><!-- /tab-fakebuyers -->
+        function showStatus(msg, className) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = msg; statusDiv.className = className;
+            if(className !== 'status-info' && className !== 'status-gemini') setTimeout(() => { statusDiv.style.display = 'none'; }, 6000);
+        }
 
+        // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyzgWeF13ZjmDFiXOMDxbrG_AfHZNDKKCH3RfQM9diHmN6g1W_givsr9q95bB-Nl5J4-w/exec';
 
-<!-- ════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════ -->
-<script>
-/* ─────────────────────────────────────────
-   CONFIG  — PASTE YOUR GAS URLs HERE
-──────────────────────────────────────────*/
-const TRACKER_GAS_URL   = 'https://script.google.com/macros/s/AKfycbyeYXZu2a5hgJ63zpUI5h6CYEROveMNgbT6fM5rHFJ6d89JqORNwamPw2QXAKsWJMQp/exec';          // ← Deploy IBI_Tracker_Backend.gs and paste URL
-const FAKE_BUYER_GAS_URL = 'https://script.google.com/macros/s/AKfycbyzgWeF13ZjmDFiXOMDxbrG_AfHZNDKKCH3RfQM9diHmN6g1W_givsr9q95bB-Nl5J4-w/exec';
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
-/* ─────────────────────────────────────────
-   THEME
-──────────────────────────────────────────*/
-(function(){
-    const t = localStorage.getItem('ibi-db-theme');
-    if(t === 'dark'){ document.body.setAttribute('data-theme','dark'); document.getElementById('themeBtn').innerText='☀️ Light'; }
-})();
-function toggleTheme(){
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    if(isDark){ document.body.removeAttribute('data-theme'); localStorage.setItem('ibi-db-theme','light'); document.getElementById('themeBtn').innerText='🌙 Dark'; }
-    else { document.body.setAttribute('data-theme','dark'); localStorage.setItem('ibi-db-theme','dark'); document.getElementById('themeBtn').innerText='☀️ Light'; }
-}
+        function handleFile(file) {
+            if (file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
+            showStatus('✨ Sending PDF to Gemini AI for analysis...', 'status-gemini');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Pdf = e.target.result.split(',')[1];
+                extractWithGemini(base64Pdf);
+            };
+            reader.readAsDataURL(file);
+        }
 
-/* ─────────────────────────────────────────
-   TAB & MODE SWITCHING
-──────────────────────────────────────────*/
-function switchTab(id, btn){
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    btn.classList.add('active');
-}
-function switchMode(m){
-    ['add','update'].forEach(k => {
-        document.getElementById('mode-' + k).style.display = (k === m) ? '' : 'none';
-        document.getElementById('pill-' + k).classList.toggle('active', k === m);
-    });
-}
+        function extractWithGemini(base64Pdf) {
+            const formData = new FormData();
+            formData.append('action', 'extract');
+            formData.append('pdfData', base64Pdf);
 
-/* ─────────────────────────────────────────
-   COURIER AUTO-ASSIGN
-──────────────────────────────────────────*/
-const COURIER_MAP = {
-    'Amazon':       'Amazon Transportation Services',
-    'Amazon Bazaar':'Amazon Transportation Services',
-    'Flipkart':     'eKart Logistics',
-    'Shopsy':       'eKart Logistics',
-    'Meesho':       'Delhivery',
-    'ShopClues':    'Delhivery',
-    'IBI Website':  'Delhivery'
-};
-const COURIER_CLS = {
-    'Amazon Transportation Services': 'c-amazon',
-    'eKart Logistics':                'c-ekart',
-    'Delhivery':                      'c-delhivery'
-};
-function setCourier(){
-    const platform = document.getElementById('t-platform').value;
-    const courier  = COURIER_MAP[platform] || '';
-    document.getElementById('t-courier').value = courier;
-    const badge = document.getElementById('t-courierBadge');
-    if(courier){ badge.className = 'courier-badge ' + COURIER_CLS[courier]; badge.innerText = courier; badge.style.display = ''; }
-    else { badge.style.display = 'none'; }
-}
+            fetch(scriptURL, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const parsed = data.data;
+                        document.getElementById('platform').value = parsed.platform || 'Unknown';
+                        document.getElementById('orderId').value = parsed.orderId || '';
+                        document.getElementById('invoiceNumber').value = parsed.invoiceNumber || '';
+                        document.getElementById('invoiceDate').value = parsed.invoiceDate || '';
+                        document.getElementById('orderDate').value = parsed.orderDate || '';
+                        document.getElementById('shipDate').value = parsed.shipDate || '';
+                        document.getElementById('buyerName').value = parsed.buyerName || '';
+                        document.getElementById('phone').value = parsed.phone || '';
+                        document.getElementById('shippingAddr').value = parsed.shippingAddr || '';
+                        document.getElementById('billingAddr').value = parsed.billingAddr || '';
+                        document.getElementById('pincode').value = parsed.pincode || '';
+                        document.getElementById('awb').value = parsed.awb || '';
+                        document.getElementById('products').value = parsed.products || '';
+                        document.getElementById('qty').value = parsed.qty || '';
+                        document.getElementById('totalAmount').value = parsed.totalAmount || '';
+                        
+                        if (parsed.paymentType) document.getElementById('paymentType').value = parsed.paymentType.includes('Prepaid') ? 'Prepaid' : 'COD';
+                        
+                        // Auto-select courier based on Platform if possible
+                        const plat = document.getElementById('platform').value;
+                        if (plat === 'Amazon' || plat === 'Amazon Bazaar') document.getElementById('courier').value = 'Amazon ATS';
+                        else if (plat === 'Flipkart' || plat === 'Shopsy') document.getElementById('courier').value = 'eKart';
+                        else if (plat === 'Meesho' || plat === 'ShopClues' || plat === 'IBI Website') document.getElementById('courier').value = 'Delhivery';
 
-/* ─────────────────────────────────────────
-   STATUS BADGE HELPER
-──────────────────────────────────────────*/
-function statusBadge(s){
-    const map = {
-        'Shipped':'sp-transit','In Transit':'sp-transit',
-        'Out for Delivery':'sp-ofd',
-        'Delivered':'sp-delivered',
-        'RTO Initiated':'sp-rto','RTO in Transit':'sp-rto','RTO Delivered':'sp-rto',
-        'NDR - Pending':'sp-ndr',
-        'Attempted Delivery':'sp-attempted',
-        'Undeliverable - Address':'sp-lost','Undeliverable - Rejected':'sp-lost','Undeliverable - No Response':'sp-lost',
-        'Stuck / Held at Hub':'sp-stuck',
-        'Lost in Transit':'sp-lost'
-    };
-    return `<span class="status-pill ${map[s] || 'sp-transit'}">${s}</span>`;
-}
+                        showStatus('✅ Gemini AI successfully extracted data. Please review before saving!', 'status-success');
+                    } else showStatus('Error: ' + data.message, 'status-error');
+                }).catch(error => showStatus('Network error while communicating with AI.', 'status-error'));
+        }
 
-/* ─────────────────────────────────────────
-   MSG HELPER
-──────────────────────────────────────────*/
-function showMsg(id, text, cls, autohide=true){
-    const el = document.getElementById(id);
-    el.innerText = text; el.className = 'msg-box ' + cls;
-    if(autohide && cls !== 'msg-info') setTimeout(()=>{ el.style.display='none'; }, 5500);
-}
+        function submitData() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "Connecting to Database...";
+            
+            const formData = new FormData();
+            formData.append('action', 'save');
+            formData.append('platform', document.getElementById('platform').value);
+            formData.append('orderId', document.getElementById('orderId').value);
+            formData.append('invoiceNumber', document.getElementById('invoiceNumber').value);
+            formData.append('invoiceDate', document.getElementById('invoiceDate').value);
+            formData.append('orderDate', document.getElementById('orderDate').value);
+            formData.append('shipDate', document.getElementById('shipDate').value);
+            formData.append('awb', document.getElementById('awb').value);
+            formData.append('buyerName', document.getElementById('buyerName').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('pincode', document.getElementById('pincode').value);
+            formData.append('billingAddr', document.getElementById('billingAddr').value);
+            formData.append('shippingAddr', document.getElementById('shippingAddr').value);
+            formData.append('products', document.getElementById('products').value);
+            formData.append('qty', document.getElementById('qty').value);
+            formData.append('totalAmount', document.getElementById('totalAmount').value);
+            formData.append('paymentType', document.getElementById('paymentType').value);
+            formData.append('fraudReason', document.getElementById('fraudReason').value);
+            formData.append('courier', document.getElementById('courier').value);
+            formData.append('packageStatus', document.getElementById('packageStatus').value);
 
-/* ─────────────────────────────────────────
-   ADD PACKAGE
-──────────────────────────────────────────*/
-function addPackage(){
-    const platform = document.getElementById('t-platform').value;
-    const orderId  = document.getElementById('t-orderId').value.trim();
-    const awb      = document.getElementById('t-awb').value.trim();
-    if(!platform){ showMsg('addMsg','⚠️ Please select a Platform.','msg-error'); return; }
-    if(!orderId)  { showMsg('addMsg','⚠️ Order ID is required.','msg-error'); return; }
-    if(!awb)      { showMsg('addMsg','⚠️ AWB / Tracking Number is required.','msg-error'); return; }
-
-    const btn = document.getElementById('t-addBtn');
-    btn.disabled = true; btn.innerText = '⏳ Saving to Database…';
-
-    const fd = new FormData();
-    fd.append('action','addPackage');
-    fd.append('platform',  platform);
-    fd.append('courier',   document.getElementById('t-courier').value);
-    fd.append('orderId',   orderId);
-    fd.append('awb',       awb);
-    fd.append('invoiceNumber', document.getElementById('t-invoiceNumber').value);
-    fd.append('products',  document.getElementById('t-products').value);
-    fd.append('qty',       document.getElementById('t-qty').value);
-    fd.append('amount',    document.getElementById('t-amount').value);
-    fd.append('paymentType', document.getElementById('t-paymentType').value);
-    fd.append('buyerName', document.getElementById('t-buyerName').value);
-    fd.append('pincode',   document.getElementById('t-pincode').value);
-    fd.append('shipDate',  document.getElementById('t-shipDate').value);
-    fd.append('expectedDelivery', document.getElementById('t-expectedDelivery').value);
-    fd.append('initStatus', document.getElementById('t-initStatus').value);
-
-    fetch(TRACKER_GAS_URL, { method:'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success'){
-                showMsg('addMsg','✅ Package saved to tracker successfully!','msg-success');
-                document.querySelectorAll('#mode-add input:not([readonly]), #mode-add textarea').forEach(el => el.value='');
-                document.getElementById('t-platform').value=''; document.getElementById('t-paymentType').value='COD';
-                document.getElementById('t-initStatus').value='Shipped'; document.getElementById('t-qty').value=1;
-                document.getElementById('t-courierBadge').style.display='none';
-                document.getElementById('t-courier').value='';
-            } else { showMsg('addMsg','❌ Error: '+data.message,'msg-error'); }
-        })
-        .catch(()=> showMsg('addMsg','❌ Network error. Please try again.','msg-error'))
-        .finally(()=>{ btn.disabled=false; btn.innerText='📦 Save Package to Tracker'; });
-}
-
-/* ─────────────────────────────────────────
-   SEARCH PACKAGE
-──────────────────────────────────────────*/
-let selectedPkg = null;
-
-function searchPackage(){
-    const q = document.getElementById('searchQuery').value.trim();
-    if(!q){ document.getElementById('searchHint').innerText='Please enter an Order ID or AWB.'; return; }
-    document.getElementById('searchHint').innerText='🔍 Searching…';
-    document.getElementById('searchResults').innerHTML='';
-    document.getElementById('updatePanel').style.display='none';
-    selectedPkg = null;
-
-    const fd = new FormData();
-    fd.append('action','searchPackage');
-    fd.append('query', q);
-
-    fetch(TRACKER_GAS_URL, { method:'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success'){
-                const results = data.data || [];
-                if(!results.length){ document.getElementById('searchHint').innerText='⚠️ No package found for that Order ID or AWB.'; return; }
-                document.getElementById('searchHint').innerText=`Found ${results.length} result(s). Click a package to update its status.`;
-                renderResults(results);
-            } else { document.getElementById('searchHint').innerText='Error: '+data.message; }
-        })
-        .catch(()=>{ document.getElementById('searchHint').innerText='❌ Network error. Please try again.'; });
-}
-
-function renderResults(results){
-    const wrap = document.getElementById('searchResults');
-    wrap.innerHTML='';
-    results.forEach(pkg => {
-        const d = document.createElement('div');
-        d.className='result-card';
-        d.innerHTML=`
-            <div class="rc-head">
-                <strong>${pkg.platform} &mdash; ${pkg.orderId}</strong>
-                ${statusBadge(pkg.currentStatus)}
-            </div>
-            <div class="rc-meta">
-                <span>📦 AWB: <strong>${pkg.awb}</strong></span>
-                <span>🚚 ${pkg.courier}</span>
-                <span>👤 ${pkg.buyerName||'—'}</span>
-                <span>📍 ${pkg.pincode||'—'}</span>
-                <span>📅 Shipped: ${pkg.shipDate||'—'}</span>
-                <span>🎯 Exp. Delivery: ${pkg.expectedDelivery||'—'}</span>
-            </div>`;
-        d.onclick = () => selectPkg(pkg, d);
-        wrap.appendChild(d);
-    });
-}
-
-function selectPkg(pkg, el){
-    document.querySelectorAll('.result-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedPkg = pkg;
-
-    document.getElementById('currentInfo').innerHTML=`
-        <div class="info-item"><div class="i-label">Platform</div><div class="i-val">${pkg.platform}</div></div>
-        <div class="info-item"><div class="i-label">Courier</div><div class="i-val">${pkg.courier}</div></div>
-        <div class="info-item"><div class="i-label">Order ID</div><div class="i-val">${pkg.orderId}</div></div>
-        <div class="info-item"><div class="i-label">AWB / Tracking No</div><div class="i-val">${pkg.awb}</div></div>
-        <div class="info-item"><div class="i-label">Buyer</div><div class="i-val">${pkg.buyerName||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Pincode</div><div class="i-val">${pkg.pincode||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Ship Date</div><div class="i-val">${pkg.shipDate||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Expected Delivery</div><div class="i-val">${pkg.expectedDelivery||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Current Status</div><div class="i-val">${statusBadge(pkg.currentStatus)}</div></div>
-        <div class="info-item"><div class="i-label">Last Updated</div><div class="i-val">${pkg.lastUpdate||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Remarks</div><div class="i-val">${pkg.remarks||'—'}</div></div>
-        <div class="info-item"><div class="i-label">Amount (₹)</div><div class="i-val">₹${pkg.amount||'—'} · ${pkg.paymentType||'—'}</div></div>
-    `;
-
-    document.getElementById('selectedRowIndex').value = pkg.rowIndex;
-    const sel = document.getElementById('newStatus');
-    for(let i=0;i<sel.options.length;i++){ if(sel.options[i].value === pkg.currentStatus){ sel.selectedIndex=i; break; } }
-    document.getElementById('updateRemarks').value = pkg.remarks || '';
-    document.getElementById('updateDate').value = '';
-
-    const panel = document.getElementById('updatePanel');
-    panel.style.display='';
-    panel.scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-/* ─────────────────────────────────────────
-   UPDATE STATUS (in-place row update)
-──────────────────────────────────────────*/
-function doUpdateStatus(){
-    const rowIndex = document.getElementById('selectedRowIndex').value;
-    if(!rowIndex) return;
-
-    const newStatus  = document.getElementById('newStatus').value;
-    const remarks    = document.getElementById('updateRemarks').value.trim();
-    const updateDate = document.getElementById('updateDate').value.trim();
-
-    const btn = document.getElementById('updateBtn');
-    btn.disabled=true; btn.innerText='⏳ Updating…';
-
-    const fd = new FormData();
-    fd.append('action','updateStatus');
-    fd.append('rowIndex', rowIndex);
-    fd.append('newStatus', newStatus);
-    fd.append('remarks',   remarks);
-    fd.append('updateDate',updateDate);
-
-    fetch(TRACKER_GAS_URL, { method:'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success'){
-                showMsg('updateMsg','✅ Status updated in database successfully!','msg-success');
-                // Refresh the badge in the result card without re-searching
-                if(selectedPkg){
-                    const card = document.querySelector('.result-card.selected .rc-head');
-                    if(card){ const old = card.querySelector('.status-pill'); if(old) old.outerHTML = statusBadge(newStatus); }
-                }
-            } else { showMsg('updateMsg','❌ Error: '+data.message,'msg-error'); }
-        })
-        .catch(()=> showMsg('updateMsg','❌ Network error. Please try again.','msg-error'))
-        .finally(()=>{ btn.disabled=false; btn.innerText='💾 Update Status in Database'; });
-}
-
-/* ─────────────────────────────────────────
-   FAKE BUYERS DB (existing logic preserved)
-──────────────────────────────────────────*/
-function showFBMsg(text, cls){
-    const el = document.getElementById('fbMsg2');
-    el.innerText=text; el.className='msg-box '+cls;
-    if(cls !== 'msg-info' && cls !== 'msg-gemini') setTimeout(()=>{ el.style.display='none'; },5500);
-    // Also show in top msg box
-    const top = document.getElementById('fbMsg');
-    if(cls === 'msg-gemini'){ top.innerText=text; top.className='msg-box msg-gemini'; }
-    else { top.style.display='none'; }
-}
-
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-dropzone.addEventListener('click', ()=> fileInput.click());
-dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
-dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('dragover'));
-dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
-
-function handleFile(file){
-    if(file.type !== 'application/pdf'){ alert('Please upload a PDF file.'); return; }
-    showFBMsg('✨ Sending PDF to Gemini AI for analysis…','msg-gemini');
-    const reader = new FileReader();
-    reader.onload = e => extractWithGemini(e.target.result.split(',')[1]);
-    reader.readAsDataURL(file);
-}
-
-function extractWithGemini(base64Pdf){
-    const fd = new FormData();
-    fd.append('action','extract'); fd.append('pdfData', base64Pdf);
-    fetch(FAKE_BUYER_GAS_URL, { method:'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success'){
-                const p = data.data;
-                document.getElementById('fb-platform').value   = p.platform || 'Unknown';
-                document.getElementById('fb-orderId').value    = p.orderId || '';
-                document.getElementById('fb-invoiceNumber').value = p.invoiceNumber || '';
-                document.getElementById('fb-invoiceDate').value   = p.invoiceDate || '';
-                document.getElementById('fb-orderDate').value     = p.orderDate || '';
-                document.getElementById('fb-shipDate').value      = p.shipDate || '';
-                document.getElementById('fb-buyerName').value     = p.buyerName || '';
-                document.getElementById('fb-phone').value         = p.phone || '';
-                document.getElementById('fb-shippingAddr').value  = p.shippingAddr || '';
-                document.getElementById('fb-billingAddr').value   = p.billingAddr || '';
-                document.getElementById('fb-pincode').value       = p.pincode || '';
-                document.getElementById('fb-awb').value           = p.awb || '';
-                document.getElementById('fb-products').value      = p.products || '';
-                document.getElementById('fb-qty').value           = p.qty || '';
-                document.getElementById('fb-totalAmount').value   = p.totalAmount || '';
-                if(p.paymentType) document.getElementById('fb-paymentType').value = p.paymentType.includes('Prepaid') ? 'Prepaid' : 'COD';
-                showFBMsg('✅ Gemini AI extracted data. Please review before saving.','msg-success');
-            } else { showFBMsg('Error: '+data.message,'msg-error'); }
-        })
-        .catch(()=> showFBMsg('Network error while communicating with AI.','msg-error'));
-}
-
-function submitFakeBuyer(){
-    const btn = document.getElementById('fb-submitBtn');
-    btn.disabled=true; btn.innerText='Saving to Database…';
-    const fd = new FormData();
-    fd.append('action','save');
-    ['platform','orderId','invoiceNumber','invoiceDate','orderDate','shipDate',
-     'awb','buyerName','phone','pincode','billingAddr','shippingAddr',
-     'products','qty','totalAmount','paymentType','fraudReason'
-    ].forEach(k => fd.append(k, document.getElementById('fb-'+k).value));
-    fetch(FAKE_BUYER_GAS_URL, { method:'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success'){
-                showFBMsg('✅ Buyer flagged & saved to Database!','msg-success');
-                document.querySelectorAll('#tab-fakebuyers input, #tab-fakebuyers textarea').forEach(el => el.value='');
-                document.getElementById('fb-platform').value='Unknown';
-            } else { showFBMsg('Error: '+data.message,'msg-error'); }
-            btn.disabled=false; btn.innerText='🚩 Flag Buyer & Save to Database';
-        })
-        .catch(()=>{ showFBMsg('Network error. Try again.','msg-error'); btn.disabled=false; btn.innerText='🚩 Flag Buyer & Save to Database'; });
-}
-
-// Enter key triggers search
-document.getElementById('searchQuery').addEventListener('keypress', e => { if(e.key==='Enter') searchPackage(); });
-</script>
+            fetch(scriptURL, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (data.type === 'updated') {
+                            showStatus('🔄 Existing Record Updated Successfully!', 'status-success');
+                        } else {
+                            showStatus('✅ New Record Added Successfully!', 'status-success');
+                        }
+                        // Clear form after a delay so they can see the message
+                        setTimeout(() => {
+                            document.querySelectorAll('input, textarea').forEach(input => input.value = ''); 
+                            document.getElementById('platform').value = 'Unknown';
+                            document.getElementById('courier').value = 'Unknown';
+                            document.getElementById('packageStatus').value = 'Processing';
+                            document.getElementById('fraudReason').value = 'None';
+                        }, 2000);
+                    } else showStatus('Error: ' + data.message, 'status-error');
+                    btn.disabled = false; btn.innerText = "Save / Update Database Record";
+                }).catch(error => {
+                    showStatus('Network error. Try again.', 'status-error');
+                    btn.disabled = false; btn.innerText = "Save / Update Database Record";
+                });
+        }
+    </script>
 </body>
 </html>
