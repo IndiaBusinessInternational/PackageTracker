@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBI Package Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#112236;--navy3:#162d47;
+  --cyan:#00D4F0;--cyan2:rgba(0,212,240,.15);--cyan3:rgba(0,212,240,.07);--cyan4:rgba(0,212,240,.35);
+  --white:#FFFFFF;--muted:#7A9BB5;
+  --border:rgba(0,212,240,.18);--border2:rgba(255,255,255,.07);
+  --green:#00E096;--amber:#FFB020;--red:#FF4D4F;--purple:#A78BFA;
+  --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,212,240,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,240,.04) 1px,transparent 1px);background-size:44px 44px}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:200;background:rgba(13,27,42,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-dots{display:flex;gap:4px;align-items:flex-end}
+.logo-dots span{background:var(--cyan);border-radius:50%;display:block}
+.logo-dots span:nth-child(1){width:6px;height:6px;opacity:.3}
+.logo-dots span:nth-child(2){width:9px;height:9px;opacity:.6}
+.logo-dots span:nth-child(3){width:13px;height:13px}
+.logo-div{width:1.5px;height:30px;background:var(--border)}
+.logo-text h1{font-size:13.5px;font-weight:800;letter-spacing:.6px;line-height:1.2}
+.logo-text p{font-size:9px;color:var(--cyan);font-style:italic;letter-spacing:1.5px;margin-top:1px}
+.header-r{display:flex;align-items:center;gap:12px}
+.ai-active-pill{display:none;align-items:center;gap:6px;background:var(--cyan2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;color:var(--cyan)}
+.ai-active-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.app-title{font-size:15px;font-weight:700;color:var(--cyan)}
+.theme-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:var(--font);transition:all .2s}
+.theme-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* TABS */
+.tabs{position:sticky;top:57px;z-index:190;background:rgba(13,27,42,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;gap:2px;padding:0 28px}
+.tab{padding:14px 22px;font-size:13px;font-weight:700;color:rgba(255,255,255,.35);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;font-family:var(--font);display:flex;align-items:center;gap:8px}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab:hover:not(.active){color:rgba(255,255,255,.7)}
+.tab-count{background:var(--cyan2);color:var(--cyan);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center;font-family:var(--mono)}
+
+/* PANELS */
+.panel{display:none;position:relative;z-index:1}
+.panel.active{display:block}
+.wrap{max-width:900px;margin:0 auto;padding:32px 24px 64px}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border);border-radius:20px;padding:52px 32px;text-align:center;cursor:pointer;transition:all .3s;background:var(--cyan3);position:relative;overflow:hidden}
+.upload-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,212,240,.08),transparent 70%);pointer-events:none}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--cyan);background:var(--cyan2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,212,240,.12)}
+.upload-icon{font-size:48px;margin-bottom:16px;display:block}
+.upload-zone h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.upload-zone p{font-size:13.5px;color:var(--muted);line-height:1.6}
+.upload-zone p strong{color:var(--cyan)}
+.ai-pill{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:20px;cursor:default}
+.upload-formats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.fmt-tag{background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:8px;font-size:11px;font-weight:600}
+
+/* STEPPER */
+#stepper{display:none;margin-top:28px}
+.step-card{background:var(--navy2);border:1px solid var(--border2);border-radius:16px;padding:24px 28px}
+.step-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px}
+.steps{display:flex;flex-direction:column}
+.step{display:flex;align-items:flex-start;gap:16px;padding:14px 0;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:15px;top:42px;width:2px;height:calc(100% - 14px);background:var(--border);transition:background .4s}
+.step.done::after,.step.active::after{background:var(--cyan)}
+.step-icon{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--navy);position:relative;z-index:1;transition:all .4s}
+.step.active .step-icon{border-color:var(--cyan);animation:pulse 1.5s infinite}
+.step.done .step-icon{border-color:var(--green);background:rgba(0,224,150,.12)}
+.step.error .step-icon{border-color:var(--red);background:rgba(255,77,79,.12)}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--cyan4)}50%{box-shadow:0 0 20px var(--cyan4),0 0 32px rgba(0,212,240,.15)}}
+.step-label{font-size:14px;font-weight:600;color:var(--muted);transition:color .3s}
+.step.active .step-label{color:var(--white)}
+.step.done .step-label{color:var(--green)}
+.step.error .step-label{color:var(--red)}
+.step-detail{font-size:12px;color:var(--muted);margin-top:3px;display:none}
+.step.active .step-detail,.step.done .step-detail,.step.error .step-detail{display:block}
+
+/* REVIEW PANEL */
+#reviewPanel{display:none;margin-top:28px}
+.review-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.review-header{background:linear-gradient(135deg,var(--navy3),var(--navy2));border-bottom:1px solid var(--border);padding:18px 26px}
+.review-header h3{font-size:16px;font-weight:800;color:var(--white);margin-bottom:4px}
+.review-header p{font-size:12.5px;color:var(--muted)}
+.review-note{background:var(--cyan3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:13px;color:var(--muted);line-height:1.6}
+.review-note strong{color:var(--cyan)}
+.review-body{padding:24px 26px}
+.rv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:4px}
+.rv-grp{display:flex;flex-direction:column}
+.rv-grp.w2{grid-column:span 2}
+.rv-grp.w3{grid-column:span 3}
+.rv-label{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.rv-input,.rv-select,.rv-textarea{width:100%;background:var(--navy);border:1px solid var(--border);color:var(--white);padding:10px 13px;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;transition:border-color .2s}
+.rv-input:focus,.rv-select:focus,.rv-textarea:focus{border-color:var(--cyan)}
+.rv-input.auto{background:var(--navy3);color:var(--muted);cursor:default}
+.rv-textarea{resize:vertical;min-height:70px}
+.rv-actions{display:flex;gap:12px;margin-top:24px}
+.btn-confirm{flex:1;padding:15px;font-size:14.5px;font-weight:800;color:var(--navy);background:var(--cyan);border:none;border-radius:10px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-confirm:hover{background:#00bdd4;transform:translateY(-1px)}
+.btn-confirm:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-re-upload{padding:15px 22px;font-size:14px;font-weight:700;color:var(--muted);background:transparent;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-re-upload:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* RESULT CARD */
+#resultCard{display:none;margin-top:28px}
+.result-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.result-header{background:linear-gradient(135deg,var(--navy3),var(--navy2));border-bottom:1px solid var(--border);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.result-hl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pf-badge{padding:5px 14px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.4px;font-family:var(--mono)}
+.pf-amazon{background:rgba(255,165,0,.15);color:#FFA500;border:1px solid rgba(255,165,0,.3)}
+.pf-flipkart{background:rgba(45,110,249,.15);color:#5B8FF9;border:1px solid rgba(45,110,249,.3)}
+.pf-meesho{background:rgba(230,76,110,.15);color:#E64C6E;border:1px solid rgba(230,76,110,.3)}
+.pf-shopclues{background:rgba(255,127,0,.15);color:#FF7F00;border:1px solid rgba(255,127,0,.3)}
+.pf-ibi{background:rgba(0,212,240,.15);color:var(--cyan);border:1px solid var(--border)}
+.courier-tag{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cd-amazon{background:#FFA500}.cd-ekart{background:#5B8FF9}.cd-delhivery{background:var(--green)}
+.status-big{padding:7px 18px;border-radius:10px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sb-transit{background:rgba(91,143,249,.15);color:#5B8FF9;border:1px solid rgba(91,143,249,.25)}
+.sb-delivered{background:rgba(0,224,150,.15);color:var(--green);border:1px solid rgba(0,224,150,.25)}
+.sb-ofd{background:rgba(255,176,32,.15);color:var(--amber);border:1px solid rgba(255,176,32,.25)}
+.sb-rto{background:rgba(255,77,79,.15);color:var(--red);border:1px solid rgba(255,77,79,.25)}
+.sb-ndr{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.sb-unknown{background:rgba(122,155,181,.15);color:var(--muted);border:1px solid rgba(122,155,181,.2)}
+.result-body{padding:24px 26px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.ib{background:var(--navy);border:1px solid var(--border2);border-radius:10px;padding:12px 14px}
+.ib.w2{grid-column:span 2}.ib.w3{grid-column:span 3}
+.ib-label{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.ib-val{font-size:13px;color:var(--white);font-weight:500;line-height:1.5;word-break:break-word}
+.ib-val.mono{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.track-strip{background:linear-gradient(135deg,rgba(0,212,240,.06),rgba(0,212,240,.02));border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:4px}
+.ts-label{font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.ts-event{font-size:13.5px;color:var(--white);font-weight:600;margin-bottom:4px}
+.ts-meta{font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.track-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:transparent;border:1px solid var(--border);color:var(--cyan);padding:9px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none;font-family:var(--font);transition:all .2s}
+.track-link:hover{background:var(--cyan2);border-color:var(--cyan)}
+.reset-btn{width:100%;margin-top:18px;padding:13px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.reset-btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan3)}
+
+/* ALL PACKAGES */
+.pkg-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+.toolbar-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.search-box input{background:transparent;border:none;outline:none;color:var(--white);font-family:var(--font);font-size:13px;padding:9px 14px;min-width:220px}
+.search-box input::placeholder{color:var(--muted)}
+.search-box button{background:var(--navy3);border:none;border-left:1px solid var(--border);color:var(--muted);padding:9px 13px;cursor:pointer;transition:color .2s}
+.search-box button:hover{color:var(--cyan)}
+.btn-ra{display:flex;align-items:center;gap:8px;background:var(--cyan);color:var(--navy);padding:9px 20px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-ra:hover{background:#00b8d4;transform:translateY(-1px)}
+.btn-ra:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.last-ref{font-size:11.5px;color:var(--muted)}
+.table-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;overflow-x:auto}
+.pkg-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px}
+.pkg-table thead{background:var(--navy3)}
+.pkg-table th{padding:12px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);white-space:nowrap}
+.pkg-table td{padding:13px 14px;border-bottom:1px solid var(--border2);color:var(--white);vertical-align:middle}
+.pkg-table tbody tr{transition:background .15s}
+.pkg-table tbody tr:hover{background:rgba(0,212,240,.04)}
+.pkg-table tbody tr:last-child td{border-bottom:none}
+.td-mono{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+.td-muted{color:var(--muted);font-size:12px}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.btn-rt{background:transparent;border:1px solid var(--border);color:var(--cyan);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .18s;white-space:nowrap}
+.btn-rt:hover{background:var(--cyan2);border-color:var(--cyan)}
+.btn-rt:disabled{opacity:.4;cursor:not-allowed}
+.empty-state{text-align:center;padding:60px 30px}
+.empty-state .ei{font-size:44px;margin-bottom:14px;display:block}
+.empty-state h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--muted)}
+.loading-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+
+/* AI SETTINGS */
+.settings-intro{font-size:13.5px;color:var(--muted);margin-bottom:28px;line-height:1.7;background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.settings-intro strong{color:var(--white)}
+.settings-intro .cyan{color:var(--cyan)}
+.ai-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
+.ai-card{background:var(--navy2);border:2px solid var(--border2);border-radius:16px;padding:22px 20px;transition:all .25s;position:relative;overflow:hidden}
+.ai-card.active-card{border-color:var(--card-color,var(--cyan));box-shadow:0 0 24px var(--card-glow,rgba(0,212,240,.15))}
+.ai-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ai-logo{font-size:26px;line-height:1}
+.active-tag{background:var(--green);color:#0D2A1A;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.4px;display:none}
+.ai-card.active-card .active-tag{display:inline}
+.ai-card h3{font-size:15px;font-weight:800;margin-bottom:3px}
+.ai-card .ai-model{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:14px}
+.key-status{display:flex;align-items:center;gap:6px;font-size:11.5px;margin-bottom:12px;font-weight:600}
+.ks-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ks-set{background:var(--green)}.ks-unset{background:var(--red)}
+.ks-set-text{color:var(--green)}.ks-unset-text{color:var(--muted)}
+.ai-key-wrap{display:flex;gap:8px;margin-bottom:12px}
+.ai-key-input{flex:1;background:var(--navy);border:1px solid var(--border);color:var(--white);padding:9px 12px;border-radius:8px;font-size:12px;font-family:var(--mono);outline:none;transition:border-color .2s}
+.ai-key-input:focus{border-color:var(--cyan)}
+.ai-key-input::placeholder{color:var(--muted);font-size:11px}
+.btn-save-key{background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:9px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;white-space:nowrap}
+.btn-save-key:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-activate{width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s;border:2px solid var(--border)}
+.btn-activate.g-btn{color:#4285F4;border-color:rgba(66,133,244,.4);background:transparent}
+.btn-activate.g-btn:hover{background:rgba(66,133,244,.1);border-color:#4285F4}
+.btn-activate.o-btn{color:#10A37F;border-color:rgba(16,163,127,.4);background:transparent}
+.btn-activate.o-btn:hover{background:rgba(16,163,127,.1);border-color:#10A37F}
+.btn-activate.c-btn{color:#D97706;border-color:rgba(217,119,6,.4);background:transparent}
+.btn-activate.c-btn:hover{background:rgba(217,119,6,.1);border-color:#D97706}
+.ai-card.active-card .btn-activate.g-btn{background:rgba(66,133,244,.12);border-color:#4285F4}
+.ai-card.active-card .btn-activate.o-btn{background:rgba(16,163,127,.12);border-color:#10A37F}
+.ai-card.active-card .btn-activate.c-btn{background:rgba(217,119,6,.12);border-color:#D97706}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);z-index:999;background:var(--navy3);border:1px solid var(--border);color:var(--white);padding:12px 22px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.info{border-color:var(--cyan);color:var(--cyan)}
+
+/* LIGHT MODE */
+[data-theme="light"]{--navy:#F0F5FA;--navy2:#FFFFFF;--navy3:#E8EFF7;--white:#0D1B2A;--muted:#5A7A98;--border:rgba(0,130,170,.15);--border2:rgba(0,130,170,.08);--cyan3:rgba(0,160,190,.05);--cyan2:rgba(0,160,190,.1)}
+[data-theme="light"] body::before{background-image:linear-gradient(rgba(0,130,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,130,170,.04) 1px,transparent 1px)}
+[data-theme="light"] .ib,[data-theme="light"] .rv-input,[data-theme="light"] .rv-select,[data-theme="light"] .rv-textarea{background:var(--navy3)}
+[data-theme="light"] .rv-input.auto{background:#e2e8f0}
+[data-theme="light"] .ai-key-input{background:var(--navy3)}
+[data-theme="light"] .pkg-table tbody tr:hover{background:rgba(0,160,190,.04)}
+
+.spin{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:640px){
+  .header{padding:10px 16px}.logo-text h1{font-size:11px}
+  .wrap{padding:20px 14px 48px}
+  .info-grid,.rv-grid{grid-template-columns:1fr 1fr}
+  .ib.w2,.ib.w3,.rv-grp.w2,.rv-grp.w3{grid-column:span 2}
+  .tabs{padding:0 14px}.tab{padding:12px 14px;font-size:12px}
+  .ai-cards{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  .info-grid,.rv-grid{grid-template-columns:1fr}
+  .ib.w2,.ib.w3,.rv-grp.w2,.rv-grp.w3{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-dots"><span></span><span></span><span></span></div>
+    <div class="logo-div"></div>
+    <div class="logo-text"><h1>INDIA BUSINESS INTERNATIONAL</h1><p>eCommerce for the World</p></div>
+  </div>
+  <div class="header-r">
+    <div class="ai-active-pill" id="headerAIPill">
+      <span class="ai-active-dot"></span>
+      <span id="headerAIName">Gemini</span>
+    </div>
+    <span class="app-title">Package Tracker</span>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab active" id="tab-upload"   onclick="switchTab('upload')">📤 Upload &amp; Track</button>
+  <button class="tab"        id="tab-packages" onclick="switchTab('packages')">
+    📦 All Packages <span class="tab-count" id="pkgCount">—</span>
+  </button>
+  <button class="tab"        id="tab-settings" onclick="switchTab('settings')">⚙️ AI Settings</button>
+  <button class="tab"        id="tab-import"   onclick="switchTab('import')">📊 Import Reports</button>
+</nav>
+
+<!-- ════ PANEL 1: UPLOAD ════ -->
+<div class="panel active" id="panel-upload">
+<div class="wrap">
+
+  <!-- Drop Zone -->
+  <div class="upload-zone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <div class="ai-pill" id="aiPill">✦ <span id="aiPillText">Gemini AI</span> Powered</div>
+    <span class="upload-icon">📄</span>
+    <h2>Drop Invoice or Shipping Label PDF</h2>
+    <p>AI will <strong>extract all details automatically</strong><br>You can review &amp; edit before saving to Google Sheet</p>
+    <div class="upload-formats">
+      <span class="fmt-tag">Amazon</span><span class="fmt-tag">Amazon Bazaar</span>
+      <span class="fmt-tag">Flipkart</span><span class="fmt-tag">Shopsy</span>
+      <span class="fmt-tag">Meesho</span><span class="fmt-tag">ShopClues</span>
+      <span class="fmt-tag">IBI Website</span>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" style="display:none">
+  </div>
+
+  <!-- Stepper -->
+  <div id="stepper">
+    <div class="step-card">
+      <div class="step-title">Processing</div>
+      <div class="steps">
+        <div class="step" id="step1"><div class="step-icon" id="si1">📤</div><div><div class="step-label">Reading PDF</div><div class="step-detail" id="sd1">Converting for AI…</div></div></div>
+        <div class="step" id="step2"><div class="step-icon" id="si2">🤖</div><div><div class="step-label">AI Extracting Details</div><div class="step-detail" id="sd2">Analysing document…</div></div></div>
+        <div class="step" id="step3"><div class="step-icon" id="si3">🚚</div><div><div class="step-label">Tracking Courier Status</div><div class="step-detail" id="sd3">Checking live delivery status…</div></div></div>
+        <div class="step" id="step4"><div class="step-icon" id="si4">💾</div><div><div class="step-label">Saving to Google Sheet</div><div class="step-detail" id="sd4">Writing to database…</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW PANEL -->
+  <div id="reviewPanel">
+    <div class="review-wrap">
+      <div class="review-header">
+        <h3>📋 Review Extracted Data</h3>
+        <p>AI has extracted the details below. Please review carefully, edit any field if needed, then click Confirm to track &amp; save.</p>
+      </div>
+      <div class="review-body">
+        <div class="review-note">
+          <strong>📌 How to proceed:</strong> Check all fields. Correct any mistakes. Then click <strong>✅ Confirm &amp; Save</strong> — only then will it be saved to Google Sheet and courier tracked.
+        </div>
+
+        <div class="rv-grid">
+
+          <div class="rv-grp">
+            <label class="rv-label">Platform *</label>
+            <select class="rv-select" id="rv-platform" onchange="updateCourierFromPlatform()">
+              <option value="Amazon">Amazon</option>
+              <option value="Amazon Bazaar">Amazon Bazaar</option>
+              <option value="Flipkart">Flipkart</option>
+              <option value="Shopsy">Shopsy</option>
+              <option value="Meesho">Meesho</option>
+              <option value="ShopClues">ShopClues</option>
+              <option value="IBI Website">IBI Website</option>
+              <option value="Unknown">Unknown</option>
+            </select>
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Courier (Auto)</label>
+            <input type="text" class="rv-input auto" id="rv-courier" readonly>
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Payment Type</label>
+            <select class="rv-select" id="rv-paymentType">
+              <option value="COD">Cash on Delivery (COD)</option>
+              <option value="Prepaid">Prepaid</option>
+            </select>
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Order ID *</label>
+            <input type="text" class="rv-input" id="rv-orderId">
+          </div>
+
+          <div class="rv-grp w2">
+            <label class="rv-label">AWB / Tracking Number *</label>
+            <input type="text" class="rv-input" id="rv-awb">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Invoice Number</label>
+            <input type="text" class="rv-input" id="rv-invoiceNumber">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Invoice Date</label>
+            <input type="text" class="rv-input" id="rv-invoiceDate" placeholder="DD/MM/YYYY">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Order Date</label>
+            <input type="text" class="rv-input" id="rv-orderDate" placeholder="DD/MM/YYYY">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Ship Date</label>
+            <input type="text" class="rv-input" id="rv-shipDate" placeholder="DD/MM/YYYY">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Expected Delivery</label>
+            <input type="text" class="rv-input" id="rv-expectedDelivery" placeholder="DD/MM/YYYY">
+          </div>
+
+          <div class="rv-grp w2">
+            <label class="rv-label">Buyer Name</label>
+            <input type="text" class="rv-input" id="rv-buyerName">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Buyer Phone</label>
+            <input type="text" class="rv-input" id="rv-buyerPhone">
+          </div>
+
+          <div class="rv-grp w3">
+            <label class="rv-label">Shipping Address</label>
+            <textarea class="rv-textarea" id="rv-shippingAddress"></textarea>
+          </div>
+
+          <div class="rv-grp w3">
+            <label class="rv-label">Billing Address</label>
+            <textarea class="rv-textarea" id="rv-billingAddress"></textarea>
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Pincode</label>
+            <input type="text" class="rv-input" id="rv-pincode">
+          </div>
+
+          <div class="rv-grp w2">
+            <label class="rv-label">Product / SKU</label>
+            <input type="text" class="rv-input" id="rv-products">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Quantity</label>
+            <input type="number" class="rv-input" id="rv-qty" min="1">
+          </div>
+
+          <div class="rv-grp">
+            <label class="rv-label">Amount (₹)</label>
+            <input type="number" class="rv-input" id="rv-amount">
+          </div>
+
+        </div><!-- /rv-grid -->
+
+        <div class="rv-actions">
+          <button class="btn-confirm" id="confirmBtn" onclick="confirmAndSave()">
+            ✅ Confirm, Track &amp; Save to Google Sheet
+          </button>
+          <button class="btn-re-upload" onclick="resetUpload()">↩ Re-upload</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div id="resultCard">
+    <div class="result-wrap">
+      <div class="result-header">
+        <div class="result-hl">
+          <span class="pf-badge" id="r-pf">—</span>
+          <div class="courier-tag"><span class="cdot" id="r-cdot"></span><span id="r-courier">—</span></div>
+        </div>
+        <div class="status-big" id="r-status">—</div>
+      </div>
+      <div class="result-body">
+        <div class="info-grid">
+          <div class="ib"><div class="ib-label">Order ID</div><div class="ib-val mono" id="r-oid">—</div></div>
+          <div class="ib w2"><div class="ib-label">AWB / Tracking</div><div class="ib-val mono" id="r-awb">—</div></div>
+          <div class="ib"><div class="ib-label">Invoice No</div><div class="ib-val mono" id="r-inv">—</div></div>
+          <div class="ib"><div class="ib-label">Invoice Date</div><div class="ib-val" id="r-invdate">—</div></div>
+          <div class="ib"><div class="ib-label">Order Date</div><div class="ib-val" id="r-orddate">—</div></div>
+          <div class="ib"><div class="ib-label">Ship Date</div><div class="ib-val" id="r-sd">—</div></div>
+          <div class="ib"><div class="ib-label">Expected Delivery</div><div class="ib-val" id="r-ed">—</div></div>
+          <div class="ib w2"><div class="ib-label">Buyer Name</div><div class="ib-val" id="r-bn">—</div></div>
+          <div class="ib"><div class="ib-label">Phone</div><div class="ib-val mono" id="r-ph">—</div></div>
+          <div class="ib w3"><div class="ib-label">Shipping Address</div><div class="ib-val" id="r-addr">—</div></div>
+          <div class="ib w3"><div class="ib-label">Billing Address</div><div class="ib-val" id="r-billaddr">—</div></div>
+          <div class="ib"><div class="ib-label">Pincode</div><div class="ib-val mono" id="r-pin">—</div></div>
+          <div class="ib w2"><div class="ib-label">Product / SKU</div><div class="ib-val" id="r-prod">—</div></div>
+          <div class="ib"><div class="ib-label">Qty</div><div class="ib-val" id="r-qty">—</div></div>
+          <div class="ib"><div class="ib-label">Amount</div><div class="ib-val" id="r-amt">—</div></div>
+          <div class="ib"><div class="ib-label">Payment</div><div class="ib-val" id="r-pay">—</div></div>
+        </div>
+        <div class="track-strip">
+          <div class="ts-label">📡 Courier Tracking</div>
+          <div class="ts-event" id="r-evt">—</div>
+          <div class="ts-meta"><span id="r-loc"></span><span id="r-tt"></span></div>
+          <a class="track-link" id="r-link" href="#" target="_blank" style="display:none">🔗 Open Tracking Page ↗</a>
+        </div>
+        <button class="reset-btn" onclick="resetUpload()">↩ Upload Another PDF</button>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+<!-- /PANEL 1 -->
+
+<!-- ════ PANEL 2: ALL PACKAGES ════ -->
+<div class="panel" id="panel-packages">
+<div class="wrap">
+
+  <div class="pkg-toolbar">
+    <div class="toolbar-l">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search Order ID, AWB, Buyer…" oninput="filterTable()">
+        <button onclick="document.getElementById('searchInput').value='';filterTable()">✕</button>
+      </div>
+      <span class="last-ref" id="lastRef"></span>
+    </div>
+    <button class="btn-ra" id="btnRA" onclick="reTrackAll()">🔄 Refresh All Pending</button>
+    <button onclick="reloadPackages()" style="padding:9px 18px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s" onmouseover="this.style.color='var(--cyan)';this.style.borderColor='var(--cyan)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↺ Reload</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="pkg-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Platform</th><th>Order ID</th><th>AWB</th>
+          <th>Buyer</th><th>Amount</th><th>Exp. Delivery</th>
+          <th>Status</th><th>Last Tracked</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="pkgBody">
+        <tr class="loading-row"><td colspan="10">⏳ Loading packages…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div></div>
+
+<!-- ════ PANEL 3: AI SETTINGS ════ -->
+<div class="panel" id="panel-settings">
+<div class="wrap">
+
+  <div class="settings-intro">
+    Choose your <strong>AI provider</strong> for PDF extraction. Your API keys are stored <span class="cyan">securely in Google Apps Script</span> — never in this page or GitHub. Switch providers anytime with one click.
+  </div>
+
+  <div class="ai-cards">
+
+    <!-- GEMINI -->
+    <div class="ai-card" id="card-gemini" style="--card-color:#4285F4;--card-glow:rgba(66,133,244,.15)">
+      <div class="ai-card-head">
+        <span class="ai-logo">✦</span>
+        <span class="active-tag">● ACTIVE</span>
+      </div>
+      <h3 style="color:#4285F4">Google Gemini</h3>
+      <div class="ai-model">gemini-2.0-flash</div>
+      <div class="key-status" id="ks-gemini">
+        <span class="ks-dot ks-unset"></span><span class="ks-unset-text">Key not set</span>
+      </div>
+      <div class="ai-key-wrap">
+        <input type="password" class="ai-key-input" id="key-gemini" placeholder="AIzaSy… paste to update">
+        <button class="btn-save-key" onclick="saveKey('gemini')">Save</button>
+      </div>
+      <button class="btn-activate g-btn" onclick="setActiveAI('gemini')">Set as Active Provider</button>
+    </div>
+
+    <!-- OPENAI -->
+    <div class="ai-card" id="card-openai" style="--card-color:#10A37F;--card-glow:rgba(16,163,127,.15)">
+      <div class="ai-card-head">
+        <span class="ai-logo">⬡</span>
+        <span class="active-tag">● ACTIVE</span>
+      </div>
+      <h3 style="color:#10A37F">OpenAI ChatGPT</h3>
+      <div class="ai-model">gpt-4o</div>
+      <div class="key-status" id="ks-openai">
+        <span class="ks-dot ks-unset"></span><span class="ks-unset-text">Key not set</span>
+      </div>
+      <div class="ai-key-wrap">
+        <input type="password" class="ai-key-input" id="key-openai" placeholder="sk-… paste to update">
+        <button class="btn-save-key" onclick="saveKey('openai')">Save</button>
+      </div>
+      <button class="btn-activate o-btn" onclick="setActiveAI('openai')">Set as Active Provider</button>
+    </div>
+
+    <!-- CLAUDE -->
+    <div class="ai-card" id="card-claude" style="--card-color:#D97706;--card-glow:rgba(217,119,6,.15)">
+      <div class="ai-card-head">
+        <span class="ai-logo">◆</span>
+        <span class="active-tag">● ACTIVE</span>
+      </div>
+      <h3 style="color:#D97706">Anthropic Claude</h3>
+      <div class="ai-model">claude-sonnet-4-6</div>
+      <div class="key-status" id="ks-claude">
+        <span class="ks-dot ks-unset"></span><span class="ks-unset-text">Key not set</span>
+      </div>
+      <div class="ai-key-wrap">
+        <input type="password" class="ai-key-input" id="key-claude" placeholder="sk-ant-… paste to update">
+        <button class="btn-save-key" onclick="saveKey('claude')">Save</button>
+      </div>
+      <button class="btn-activate c-btn" onclick="setActiveAI('claude')">Set as Active Provider</button>
+    </div>
+
+  </div>
+
+</div></div>
+
+
+<!-- ════ PANEL 4: IMPORT REPORTS ════ -->
+<div class="panel" id="panel-import">
+<div class="wrap">
+
+  <div class="settings-intro">
+    <strong>📊 Bulk Import from Platform Reports</strong><br>
+    Download order reports from Amazon, Flipkart, Meesho or ShopClues seller panels and upload here. AI will extract all orders and save them to Google Sheet — no manual entry needed.
+  </div>
+
+  <!-- How to download reports -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:28px">
+
+    <div style="background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+      <div style="font-size:20px;margin-bottom:10px">📦</div>
+      <h4 style="font-size:14px;font-weight:800;color:#FFA500;margin-bottom:8px">Amazon Seller Central</h4>
+      <p style="font-size:12px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--white)">Path:</strong> Reports → Fulfillment → Tracking → Shipment Tracking<br>
+        <strong style="color:var(--white)">Or:</strong> Orders → Order Reports → Download<br>
+        <strong style="color:var(--white)">Format:</strong> CSV or TXT
+      </p>
+    </div>
+
+    <div style="background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+      <div style="font-size:20px;margin-bottom:10px">🛒</div>
+      <h4 style="font-size:14px;font-weight:800;color:#5B8FF9;margin-bottom:8px">Flipkart / Shopsy</h4>
+      <p style="font-size:12px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--white)">Path:</strong> Seller Hub → Orders → Download Report<br>
+        <strong style="color:var(--white)">Or:</strong> Reports → Order Reports → Export<br>
+        <strong style="color:var(--white)">Format:</strong> CSV or Excel
+      </p>
+    </div>
+
+    <div style="background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+      <div style="font-size:20px;margin-bottom:10px">🟣</div>
+      <h4 style="font-size:14px;font-weight:800;color:#E64C6E;margin-bottom:8px">Meesho</h4>
+      <p style="font-size:12px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--white)">Path:</strong> Orders → All Orders → Download<br>
+        <strong style="color:var(--white)">Format:</strong> Excel or CSV
+      </p>
+    </div>
+
+    <div style="background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+      <div style="font-size:20px;margin-bottom:10px">🔶</div>
+      <h4 style="font-size:14px;font-weight:800;color:#FF7F00;margin-bottom:8px">ShopClues</h4>
+      <p style="font-size:12px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--white)">Path:</strong> Seller Panel → My Orders → Export Orders<br>
+        <strong style="color:var(--white)">Format:</strong> CSV
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Upload area -->
+  <div style="background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:28px">
+
+    <div style="margin-bottom:20px">
+      <label style="font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px">Platform (optional — AI will auto-detect)</label>
+      <select id="imp-platform" style="background:var(--navy);border:1px solid var(--border);color:var(--white);padding:10px 14px;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;width:100%;max-width:280px">
+        <option value="auto">Auto Detect</option>
+        <option value="Amazon">Amazon</option>
+        <option value="Amazon Bazaar">Amazon Bazaar</option>
+        <option value="Flipkart">Flipkart</option>
+        <option value="Shopsy">Shopsy</option>
+        <option value="Meesho">Meesho</option>
+        <option value="ShopClues">ShopClues</option>
+      </select>
+    </div>
+
+    <!-- File Drop Zone -->
+    <div id="imp-dropzone" onclick="document.getElementById('imp-fileinput').click()"
+      style="border:2px dashed var(--border);border-radius:14px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .25s;background:var(--cyan3);margin-bottom:16px;position:relative">
+      <div id="imp-drop-content">
+        <div style="font-size:38px;margin-bottom:12px">📂</div>
+        <div style="font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px">Drop your report file here</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">or click to browse</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span style="background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:3px 11px;border-radius:6px;font-size:11px;font-weight:600">.csv</span>
+          <span style="background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:3px 11px;border-radius:6px;font-size:11px;font-weight:600">.xlsx</span>
+          <span style="background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:3px 11px;border-radius:6px;font-size:11px;font-weight:600">.xls</span>
+          <span style="background:var(--navy3);border:1px solid var(--border);color:var(--muted);padding:3px 11px;border-radius:6px;font-size:11px;font-weight:600">.txt</span>
+        </div>
+      </div>
+      <!-- File selected state -->
+      <div id="imp-file-selected" style="display:none">
+        <div style="font-size:38px;margin-bottom:10px">📄</div>
+        <div id="imp-filename" style="font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:4px"></div>
+        <div id="imp-filesize" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+        <button onclick="clearImpFile(event)" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">✕ Remove file</button>
+      </div>
+    </div>
+    <input type="file" id="imp-fileinput" accept=".csv,.xlsx,.xls,.txt" style="display:none">
+
+    <!-- Progress bar (hidden until processing) -->
+    <div id="imp-progress" style="display:none;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px" id="imp-progress-text">Reading file…</div>
+      <div style="background:var(--navy);border-radius:4px;height:4px;overflow:hidden">
+        <div id="imp-progress-bar" style="height:100%;background:var(--cyan);width:0%;transition:width .4s;border-radius:4px"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button id="imp-btn" onclick="importReport()" style="padding:13px 28px;background:var(--cyan);color:var(--navy);border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s">
+        📊 Import &amp; Save All Orders
+      </button>
+      <button onclick="clearImpFile()" style="padding:13px 20px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s">
+        Clear
+      </button>
+    </div>
+
+    <div id="imp-result" style="display:none;margin-top:18px;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700"></div>
+
+  </div>
+
+</div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS = 'https://script.google.com/macros/s/AKfycbxLPmBJmkgFbO-5Ew5uObdVGwMNBXQ8oJCmssIue_Av_G2iaRAaArGzbRNaF7gMzFYsEg/exec';
+
+const COURIER_MAP = {
+  'Amazon':'Amazon Transportation Services','Amazon Bazaar':'Amazon Transportation Services',
+  'Flipkart':'eKart Logistics','Shopsy':'eKart Logistics',
+  'Meesho':'Delhivery','ShopClues':'Delhivery','IBI Website':'Delhivery'
+};
+const PF_CLS = {'Amazon':'pf-amazon','Amazon Bazaar':'pf-amazon','Flipkart':'pf-flipkart','Shopsy':'pf-flipkart','Meesho':'pf-meesho','ShopClues':'pf-shopclues','IBI Website':'pf-ibi'};
+const CD_CLS = {'Amazon Transportation Services':'cd-amazon','eKart Logistics':'cd-ekart','Delhivery':'cd-delhivery'};
+const AI_LABELS = { gemini:'Gemini 2.0 Flash', openai:'GPT-4o', claude:'Claude Sonnet' };
+
+let currentSettings = { activeAI:'gemini', geminiKeySet:false, openaiKeySet:false, claudeKeySet:false };
+
+/* ─ THEME ─ */
+(function(){
+  if(localStorage.getItem('ibi-pt')==='light'){
+    document.body.setAttribute('data-theme','light');
+    document.getElementById('themeBtn').innerText='🌙 Dark';
+  }
+})();
+function toggleTheme(){
+  const light=document.body.getAttribute('data-theme')==='light';
+  document.body.setAttribute('data-theme',light?'':'light');
+  if(!light) localStorage.setItem('ibi-pt','light'); else localStorage.removeItem('ibi-pt');
+  document.getElementById('themeBtn').innerText=light?'🌙 Dark':'☀️ Light';
+}
+
+/* ─ TABS ─ */
+function switchTab(id){
+  ['upload','packages','settings','import'].forEach(t=>{
+    document.getElementById('panel-'+t).classList.toggle('active',t===id);
+    document.getElementById('tab-'+t).classList.toggle('active',t===id);
+  });
+  if(id==='packages') loadPackages();
+  if(id==='settings') loadSettings();
+}
+
+/* ─ TOAST ─ */
+let _tt;
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+type+' show';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+/* ─ DRAG & DROP ─ */
+const dz=document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0])});
+document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])processFile(e.target.files[0])});
+
+/* ─ PHASE 1: EXTRACT ONLY ─ */
+function processFile(file){
+  if(file.type!=='application/pdf'){toast('Please upload a PDF file only.','err');return}
+  dz.style.display='none';
+  document.getElementById('stepper').style.display='block';
+  document.getElementById('reviewPanel').style.display='none';
+  document.getElementById('resultCard').style.display='none';
+  setStep(1,'pending');setStep(2,'pending');setStep(3,'pending');setStep(4,'pending');
+
+  setStep(1,'active','Reading PDF…');
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    setStep(1,'done','File ready');
+    setStep(2,'active','AI extracting all details from your PDF…');
+
+    const fd=new FormData();
+    fd.append('action','extractOnly');
+    fd.append('pdfData',ev.target.result.split(',')[1]);
+
+    fetch(GAS,{method:'POST',body:fd})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.status==='success'){
+          setStep(2,'done','Extraction complete — please review');
+          document.getElementById('stepper').style.display='none';
+          showReviewForm(d.data);
+        } else {
+          setStep(2,'error',d.message||'Extraction failed');
+          toast('Error: '+(d.message||'Unknown'),'err');
+        }
+      })
+      .catch(()=>{setStep(2,'error','Network error — check connection');toast('Network error. Try again.','err')});
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ─ SHOW REVIEW FORM ─ */
+function showReviewForm(d){
+  // Populate all fields
+  setRV('rv-platform',      d.platform||'Unknown',     'select');
+  setRV('rv-paymentType',   d.paymentType||'COD',       'select');
+  setRV('rv-orderId',       d.orderId);
+  setRV('rv-awb',           d.awb);
+  setRV('rv-invoiceNumber',  d.invoiceNumber);
+  setRV('rv-invoiceDate',    d.invoiceDate);
+  setRV('rv-orderDate',      d.orderDate);
+  setRV('rv-shipDate',       d.shipDate);
+  setRV('rv-expectedDelivery',d.expectedDelivery);
+  setRV('rv-buyerName',     d.buyerName);
+  setRV('rv-buyerPhone',    d.buyerPhone);
+  setRV('rv-shippingAddress',d.shippingAddress,'textarea');
+  setRV('rv-billingAddress', d.billingAddress,'textarea');
+  setRV('rv-pincode',       d.pincode);
+  setRV('rv-products',      d.products);
+  setRV('rv-qty',           d.qty);
+  setRV('rv-amount',        d.amount);
+  updateCourierFromPlatform();
+  document.getElementById('reviewPanel').style.display='block';
+  document.getElementById('reviewPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('✅ Data extracted — review & confirm to save','ok');
+}
+
+function setRV(id, val, type='input'){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(type==='select'){
+    for(let i=0;i<el.options.length;i++){
+      if(el.options[i].value===(val||'')) {el.selectedIndex=i; return;}
+    }
+  } else {
+    el.value = val||'';
+  }
+}
+
+function updateCourierFromPlatform(){
+  const platform=document.getElementById('rv-platform').value;
+  document.getElementById('rv-courier').value=COURIER_MAP[platform]||'Unknown';
+}
+
+/* ─ PHASE 2: CONFIRM & SAVE ─ */
+function confirmAndSave(){
+  const awb=document.getElementById('rv-awb').value.trim();
+  const orderId=document.getElementById('rv-orderId').value.trim();
+  if(!awb&&!orderId){toast('Order ID or AWB is required','err');return}
+
+  const btn=document.getElementById('confirmBtn');
+  btn.disabled=true; btn.textContent='⏳ Tracking & Saving…';
+
+  // Show stepper steps 3-4
+  document.getElementById('reviewPanel').style.display='none';
+  document.getElementById('stepper').style.display='block';
+  setStep(1,'done','File read');
+  setStep(2,'done','Data extracted & reviewed');
+  setStep(3,'active','Checking live courier status…');
+
+  const fd=new FormData();
+  fd.append('action','confirmPackage');
+  fd.append('platform',         document.getElementById('rv-platform').value);
+  fd.append('courier',          document.getElementById('rv-courier').value);
+  fd.append('paymentType',      document.getElementById('rv-paymentType').value);
+  fd.append('orderId',          document.getElementById('rv-orderId').value);
+  fd.append('awb',              document.getElementById('rv-awb').value);
+  fd.append('invoiceNumber',    document.getElementById('rv-invoiceNumber').value);
+  fd.append('invoiceDate',      document.getElementById('rv-invoiceDate').value);
+  fd.append('orderDate',        document.getElementById('rv-orderDate').value);
+  fd.append('shipDate',         document.getElementById('rv-shipDate').value);
+  fd.append('expectedDelivery', document.getElementById('rv-expectedDelivery').value);
+  fd.append('buyerName',        document.getElementById('rv-buyerName').value);
+  fd.append('buyerPhone',       document.getElementById('rv-buyerPhone').value);
+  fd.append('shippingAddress',  document.getElementById('rv-shippingAddress').value);
+  fd.append('billingAddress',   document.getElementById('rv-billingAddress').value);
+  fd.append('pincode',          document.getElementById('rv-pincode').value);
+  fd.append('products',         document.getElementById('rv-products').value);
+  fd.append('qty',              document.getElementById('rv-qty').value);
+  fd.append('amount',           document.getElementById('rv-amount').value);
+
+  fetch(GAS,{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='success'){
+        setStep(3,'done',d.data.trackingStatus||'Status fetched');
+        setStep(4,'done','Saved to Google Sheet');
+        setTimeout(()=>{
+          document.getElementById('stepper').style.display='none';
+          showResult(d.data);
+          refreshCount();
+        },600);
+      } else {
+        setStep(3,'error',d.message||'Error');
+        toast('Error: '+(d.message||'Unknown'),'err');
+        document.getElementById('reviewPanel').style.display='block';
+        document.getElementById('stepper').style.display='none';
+      }
+    })
+    .catch(()=>{
+      setStep(3,'error','Network error');
+      toast('Network error. Please try again.','err');
+      document.getElementById('reviewPanel').style.display='block';
+      document.getElementById('stepper').style.display='none';
+    })
+    .finally(()=>{btn.disabled=false;btn.textContent='✅ Confirm, Track & Save to Google Sheet'});
+}
+
+/* ─ STEP STATE ─ */
+function setStep(n,state,detail){
+  const el=document.getElementById('step'+n);
+  el.className='step '+state;
+  if(detail) document.getElementById('sd'+n).textContent=detail;
+  const ICONS={pending:['📤','🤖','🚚','💾'],active:'⏳',done:'✅',error:'❌'};
+  document.getElementById('si'+n).textContent=state==='pending'?ICONS.pending[n-1]:ICONS[state];
+}
+
+/* ─ STATUS HELPERS ─ */
+function sCls(s){
+  s=(s||'').toLowerCase();
+  if(s.includes('delivered')&&!s.includes('rto'))return'sb-delivered';
+  if(s.includes('out for'))return'sb-ofd';
+  if(s.includes('rto')||s.includes('return'))return'sb-rto';
+  if(s.includes('attempt')||s.includes('ndr')||s.includes('undeliver'))return'sb-ndr';
+  if(s.includes('transit')||s.includes('ship')||s.includes('dispatch'))return'sb-transit';
+  return'sb-unknown';
+}
+function sIcon(s){
+  s=(s||'').toLowerCase();
+  if(s.includes('delivered')&&!s.includes('rto'))return'✅';
+  if(s.includes('out for'))return'🚴';
+  if(s.includes('rto')||s.includes('return'))return'🔴';
+  if(s.includes('attempt')||s.includes('ndr'))return'🟠';
+  if(s.includes('transit')||s.includes('ship'))return'📦';
+  return'⏳';
+}
+
+/* ─ SHOW RESULT ─ */
+function showResult(d){
+  document.getElementById('stepper').style.display='none';
+  document.getElementById('resultCard').style.display='block';
+
+  const pf=document.getElementById('r-pf');
+  pf.textContent=d.platform||'—'; pf.className='pf-badge '+(PF_CLS[d.platform]||'pf-ibi');
+  document.getElementById('r-courier').textContent=d.courier||'—';
+  document.getElementById('r-cdot').className='cdot '+(CD_CLS[d.courier]||'cd-delhivery');
+
+  const sb=document.getElementById('r-status');
+  sb.innerHTML=sIcon(d.trackingStatus)+' '+(d.trackingStatus||'Unknown');
+  sb.className='status-big '+(sCls(d.trackingStatus));
+
+  const F={
+    'r-oid':d.orderId,'r-awb':d.awb,'r-inv':d.invoiceNo,
+    'r-invdate':d.invoiceDate,'r-orddate':d.orderDate,
+    'r-sd':d.shipDate,'r-ed':d.expectedDelivery,
+    'r-bn':d.buyerName,'r-ph':d.buyerPhone,
+    'r-addr':d.shippingAddress,'r-billaddr':d.billingAddress,
+    'r-pin':d.pincode,'r-prod':d.products,'r-qty':d.qty,
+    'r-amt':d.amount?'₹'+d.amount:'—','r-pay':d.payType
+  };
+  Object.entries(F).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=(val&&String(val).trim())?val:'—';
+  });
+
+  document.getElementById('r-evt').textContent=d.statusDetail||d.trackingStatus||'No tracking details';
+  document.getElementById('r-loc').textContent=d.lastLocation?'📍 '+d.lastLocation:'';
+  document.getElementById('r-tt').textContent=d.lastEventTime?'🕐 '+d.lastEventTime:'';
+  const lnk=document.getElementById('r-link');
+  if(d.trackUrl){lnk.href=d.trackUrl;lnk.style.display='inline-flex';}
+  else{lnk.style.display='none';}
+
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('✅ Saved & tracked successfully!','ok');
+}
+
+function resetUpload(){
+  dz.style.display='';
+  document.getElementById('stepper').style.display='none';
+  document.getElementById('reviewPanel').style.display='none';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('fileInput').value='';
+  dz.scrollIntoView({behavior:'smooth'});
+}
+
+/* ─ ALL PACKAGES ─ */
+let allPkgs=[];
+function loadPackages(){
+  document.getElementById('pkgBody').innerHTML='<tr class="loading-row"><td colspan="10">⏳ Loading…</td></tr>';
+  const fd=new FormData(); fd.append('action','loadPackages');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){
+      allPkgs=d.data||[]; renderTable(allPkgs);
+      document.getElementById('pkgCount').textContent=allPkgs.length||'0';
+      document.getElementById('lastRef').textContent='Updated '+new Date().toLocaleTimeString('en-IN');
+    } else {
+      document.getElementById('pkgBody').innerHTML=`<tr class="loading-row"><td colspan="10">⚠️ ${d.message}</td></tr>`;
+    }
+  }).catch(()=>{document.getElementById('pkgBody').innerHTML='<tr class="loading-row"><td colspan="10">❌ Network error</td></tr>'});
+}
+
+function refreshCount(){
+  const fd=new FormData(); fd.append('action','loadPackages');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success') document.getElementById('pkgCount').textContent=(d.data||[]).length;
+  }).catch(()=>{});
+}
+
+function renderTable(rows){
+  const tbody=document.getElementById('pkgBody');
+  if(!rows||!rows.length){
+    tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><span class="ei">📦</span><h3>No packages yet</h3><p>Upload a PDF in the Upload &amp; Track tab to get started</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map((r,i)=>`
+    <tr id="pr-${r.rowIndex}">
+      <td class="td-muted">${i+1}</td>
+      <td><span class="pf-badge ${PF_CLS[r.platform]||'pf-ibi'}" style="padding:2px 9px;font-size:10.5px">${r.platform||'—'}</span></td>
+      <td class="td-mono">${r.orderId||'—'}</td>
+      <td class="td-mono">${r.awb||'—'}</td>
+      <td>${r.buyerName||'—'}</td>
+      <td class="td-muted">${r.amount?'₹'+r.amount:'—'} <small>${r.payType||''}</small></td>
+      <td class="td-muted">${r.expectedDelivery||r.shipDate||'—'}</td>
+      <td><span class="status-pill ${sCls(r.status)}">${sIcon(r.status)} ${r.status||'Unknown'}</span></td>
+      <td class="td-muted" style="font-size:11px">${r.lastTracked||'—'}</td>
+      <td><button class="btn-rt" id="rt-${r.rowIndex}" onclick="reTrackOne(${r.rowIndex},this)">🔄 Retrack</button></td>
+    </tr>`).join('');
+}
+
+function filterTable(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  if(!q){renderTable(allPkgs);return}
+  renderTable(allPkgs.filter(r=>
+    (r.orderId||'').toLowerCase().includes(q)||(r.awb||'').toLowerCase().includes(q)||
+    (r.buyerName||'').toLowerCase().includes(q)||(r.platform||'').toLowerCase().includes(q)||
+    (r.status||'').toLowerCase().includes(q)
+  ));
+}
+
+function reTrackOne(rowIndex,btn){
+  btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span>';
+  const fd=new FormData(); fd.append('action','reTrack'); fd.append('rowIndex',rowIndex);
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){
+      const pkg=allPkgs.find(p=>p.rowIndex===rowIndex);
+      if(pkg&&d.data){pkg.status=d.data.status||pkg.status;pkg.lastTracked=d.data.lastTracked||pkg.lastTracked}
+      const tr=document.getElementById('pr-'+rowIndex);
+      if(tr&&d.data){
+        tr.cells[7].innerHTML=`<span class="status-pill ${sCls(d.data.status)}">${sIcon(d.data.status)} ${d.data.status||'Unknown'}</span>`;
+        tr.cells[8].textContent=d.data.lastTracked||'—';
+      }
+      toast('Status updated ✓','ok');
+    } else toast(d.message||'Retrack failed','err');
+  }).catch(()=>toast('Network error','err'))
+  .finally(()=>{btn.disabled=false;btn.innerHTML='🔄 Retrack'});
+}
+
+function reTrackAll(){
+  const btn=document.getElementById('btnRA');
+  btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Refreshing…';
+  toast('Refreshing all pending packages…','info');
+  const fd=new FormData(); fd.append('action','reTrackAll');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){toast(`Updated ${d.updated||0} package(s) ✓`,'ok');loadPackages();}
+    else toast(d.message||'Failed','err');
+  }).catch(()=>toast('Network error','err'))
+  .finally(()=>{btn.disabled=false;btn.innerHTML='🔄 Refresh All Pending'});
+}
+
+/* ─ AI SETTINGS ─ */
+function loadSettings(){
+  const fd=new FormData(); fd.append('action','getSettings');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'||d.activeAI){
+      currentSettings=d;
+      renderSettings(d);
+    }
+  }).catch(()=>{});
+}
+
+function renderSettings(s){
+  ['gemini','openai','claude'].forEach(ai=>{
+    const isActive=s.activeAI===ai;
+    const keySet=s[ai+'KeySet'];
+    document.getElementById('card-'+ai).classList.toggle('active-card',isActive);
+    const ks=document.getElementById('ks-'+ai);
+    ks.innerHTML=`<span class="ks-dot ${keySet?'ks-set':'ks-unset'}"></span><span class="${keySet?'ks-set-text':'ks-unset-text'}">${keySet?'✓ API key saved':'Key not set'}</span>`;
+  });
+  // Update header pill
+  const pill=document.getElementById('headerAIPill');
+  pill.style.display='flex';
+  document.getElementById('headerAIName').textContent=AI_LABELS[s.activeAI]||s.activeAI;
+  // Update upload pill
+  document.getElementById('aiPillText').textContent=AI_LABELS[s.activeAI]||'Gemini AI';
+}
+
+function setActiveAI(ai){
+  const fd=new FormData(); fd.append('action','saveSettings'); fd.append('activeAI',ai);
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){
+      currentSettings.activeAI=ai;
+      renderSettings(currentSettings);
+      toast('✅ '+AI_LABELS[ai]+' set as active AI','ok');
+    } else toast('Error: '+(d.message||'Save failed'),'err');
+  }).catch(()=>toast('Network error','err'));
+}
+
+function saveKey(ai){
+  const val=document.getElementById('key-'+ai).value.trim();
+  if(!val){toast('Please paste an API key first','err');return}
+  const fd=new FormData(); fd.append('action','saveSettings'); fd.append(ai+'Key',val);
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){
+      currentSettings[ai+'KeySet']=true;
+      renderSettings(currentSettings);
+      document.getElementById('key-'+ai).value='';
+      toast('✅ '+AI_LABELS[ai]+' key saved securely in GAS','ok');
+    } else toast('Error: '+(d.message||'Save failed'),'err');
+  }).catch(()=>toast('Network error','err'));
+}
+
+/* ─ IMPORT REPORT ─ */
+let impFileData = null; // stores {text, name, size}
+
+// Setup drag & drop and file input for import
+(function(){
+  const dz2 = document.getElementById('imp-dropzone');
+  const fi2 = document.getElementById('imp-fileinput');
+  if(!dz2||!fi2) return;
+
+  dz2.addEventListener('dragover', e=>{ e.preventDefault(); dz2.style.borderColor='var(--cyan)'; dz2.style.background='var(--cyan2)'; });
+  dz2.addEventListener('dragleave', ()=>{ dz2.style.borderColor=''; dz2.style.background='var(--cyan3)'; });
+  dz2.addEventListener('drop', e=>{
+    e.preventDefault(); dz2.style.borderColor=''; dz2.style.background='var(--cyan3)';
+    const file = e.dataTransfer.files[0];
+    if(file) handleImpFile(file);
+  });
+  fi2.addEventListener('change', e=>{ if(e.target.files[0]) handleImpFile(e.target.files[0]); });
+})();
+
+function handleImpFile(file){
+  const allowed = ['.csv','.xlsx','.xls','.txt'];
+  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+  if(!allowed.includes(ext)){ toast('Please upload a CSV, Excel, or TXT file','err'); return; }
+
+  // Show selected state
+  document.getElementById('imp-drop-content').style.display='none';
+  document.getElementById('imp-file-selected').style.display='block';
+  document.getElementById('imp-filename').textContent=file.name;
+  document.getElementById('imp-filesize').textContent=formatFileSize(file.size);
+
+  // Read file content
+  if(ext==='.xlsx'||ext==='.xls'){
+    // For Excel files — use SheetJS to convert to CSV
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        // Load SheetJS dynamically if needed
+        if(typeof XLSX==='undefined'){
+          const script=document.createElement('script');
+          script.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          script.onload=function(){
+            const wb = XLSX.read(e.target.result,{type:'array'});
+            // Find the best data sheet — skip Help/instruction sheets, pick the one with most columns
+            let bestSheet = wb.SheetNames[0];
+            let maxCols = 0;
+            for (const name of wb.SheetNames) {
+              const ws2 = wb.Sheets[name];
+              if (!ws2['!ref']) continue;
+              const range = XLSX.utils.decode_range(ws2['!ref']);
+              if (range.e.c > maxCols) { maxCols = range.e.c; bestSheet = name; }
+            }
+            const ws = wb.Sheets[bestSheet];
+            const csv = XLSX.utils.sheet_to_csv(ws);
+            impFileData = {text:csv, name:file.name, size:file.size};
+            toast('✅ Excel file ready — click Import to process','ok');
+          };
+          document.head.appendChild(script);
+        } else {
+          const wb = XLSX.read(e.target.result,{type:'array'});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const csv = XLSX.utils.sheet_to_csv(ws);
+          impFileData = {text:csv, name:file.name, size:file.size};
+          toast('✅ Excel file ready — click Import to process','ok');
+        }
+      } catch(err){ toast('Could not read Excel file: '+err.message,'err'); }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV or TXT — read as text
+    const reader = new FileReader();
+    reader.onload = function(e){
+      impFileData = {text:e.target.result, name:file.name, size:file.size};
+      toast('✅ File ready — click Import to process','ok');
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+}
+
+function clearImpFile(e){
+  if(e) e.stopPropagation();
+  impFileData = null;
+  document.getElementById('imp-fileinput').value='';
+  document.getElementById('imp-drop-content').style.display='block';
+  document.getElementById('imp-file-selected').style.display='none';
+  document.getElementById('imp-result').style.display='none';
+  document.getElementById('imp-progress').style.display='none';
+}
+
+function formatFileSize(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1048576) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/1048576).toFixed(1)+' MB';
+}
+
+function setImpProgress(pct, text){
+  document.getElementById('imp-progress').style.display='block';
+  document.getElementById('imp-progress-bar').style.width=pct+'%';
+  document.getElementById('imp-progress-text').textContent=text;
+}
+
+function importReport(){
+  if(!impFileData || !impFileData.text || impFileData.text.trim().length < 20){
+    toast('Please upload a report file first','err'); return;
+  }
+  const btn=document.getElementById('imp-btn');
+  btn.disabled=true; btn.textContent='⏳ AI processing…';
+  const res=document.getElementById('imp-result');
+  res.style.display='none';
+
+  setImpProgress(20,'Reading file contents…');
+
+  setTimeout(()=>{
+    setImpProgress(50,'Sending to AI for extraction…');
+
+    const fd=new FormData();
+    fd.append('action','importReport');
+    fd.append('csvData', impFileData.text.substring(0,30000));
+    fd.append('reportType', document.getElementById('imp-platform').value);
+    fd.append('fileName', impFileData.name);
+
+    fetch(GAS,{method:'POST',body:fd})
+      .then(r=>r.json())
+      .then(d=>{
+        setImpProgress(100,'Complete!');
+        setTimeout(()=>document.getElementById('imp-progress').style.display='none', 1500);
+        if(d.status==='success'){
+          res.style.display='block';
+          res.style.background='rgba(0,224,150,.1)';
+          res.style.border='1px solid rgba(0,224,150,.3)';
+          res.style.color='var(--green)';
+          res.innerHTML=`✅ Import complete! <strong>${d.saved}</strong> new orders saved, <strong>${d.updated}</strong> updated, <strong>${d.skipped}</strong> skipped out of <strong>${d.total}</strong> total. <a href="#" onclick="switchTab('packages');return false;" style="color:var(--cyan);text-decoration:underline;margin-left:8px">View All Packages →</a>`;
+          document.getElementById('pkgCount').textContent='…';
+          toast(`✅ Imported ${d.total} orders from ${impFileData.name}!`,'ok');
+        } else {
+          res.style.display='block';
+          res.style.background='rgba(255,77,79,.1)';
+          res.style.border='1px solid rgba(255,77,79,.3)';
+          res.style.color='var(--red)';
+          res.textContent='❌ Error: '+(d.message||'Import failed');
+          toast('Import failed: '+(d.message||'Unknown error'),'err');
+        }
+      })
+      .catch(()=>{ toast('Network error. Try again.','err'); setImpProgress(0,''); })
+      .finally(()=>{ btn.disabled=false; btn.textContent='📊 Import & Save All Orders'; });
+  }, 300);
+}
+
+/* ─ RELOAD PACKAGES ─ */
+function reloadPackages(){
+  document.getElementById('searchInput').value='';
+  loadPackages();
+  toast('🔄 Reloading from Google Sheet…','info');
+}
+
+// Load settings on startup
+setTimeout(()=>{
+  const fd=new FormData(); fd.append('action','getSettings');
+  fetch(GAS,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if(d.activeAI||d.status==='success'){currentSettings=d;renderSettings(d);}
+  }).catch(()=>{});
+},1000);
+</script>
+</body>
+</html>
