@@ -35,6 +35,25 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .ai-active-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
 .app-title{font-size:15px;font-weight:700;color:var(--cyan)}
+/* ── Version badge ── */
+.ver-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(0,212,240,.1);
+  border:1px solid rgba(0,212,240,.32);
+  border-radius:20px;
+  padding:2px 10px 2px 8px;
+  font-size:11px;font-weight:700;
+  color:var(--cyan);
+  letter-spacing:.04em;
+  cursor:default;user-select:none;
+  transition:background .2s,border-color .2s;
+  flex-shrink:0;
+  white-space:nowrap;
+}
+.ver-badge:hover{background:rgba(0,212,240,.22);border-color:rgba(0,212,240,.6);}
+.ver-badge::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan);opacity:.7;flex-shrink:0;}
+[data-theme="light"] .ver-badge{background:rgba(0,156,200,.08);border-color:rgba(0,156,200,.3);}
+[data-theme="light"] .ver-badge:hover{background:rgba(0,156,200,.16);}
 .theme-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:var(--font);transition:all .2s}
 .theme-btn:hover{border-color:var(--cyan);color:var(--cyan)}
 
@@ -312,6 +331,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
 @media(max-width:640px){
   .header{padding:10px 16px}.logo-text h1{font-size:11px}
+  .ver-badge{font-size:10px;padding:2px 8px 2px 6px;}
   .wrap{padding:20px 14px 48px}
   .info-grid,.rv-grid{grid-template-columns:1fr 1fr}
   .ib.w2,.ib.w3,.rv-grp.w2,.rv-grp.w3{grid-column:span 2}
@@ -333,6 +353,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
     <div class="logo-div"></div>
     <div class="logo-text"><h1>INDIA BUSINESS INTERNATIONAL</h1><p>eCommerce for the World</p></div>
   </div>
+  <span class="ver-badge" id="verBadge"></span>
   <div class="header-r">
     <div class="ai-active-pill" id="headerAIPill">
       <span class="ai-active-dot"></span>
@@ -929,6 +950,30 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
 <script>
 const GAS = 'https://script.google.com/macros/s/AKfycbxLPmBJmkgFbO-5Ew5uObdVGwMNBXQ8oJCmssIue_Av_G2iaRAaArGzbRNaF7gMzFYsEg/exec';
+
+/* ─────────────────────────────────────────────────────────────────────
+   APP VERSION — update these three constants on every release.
+   Versioning convention:
+     v3.1, v3.2 … small patches  (bug fix, minor tweak, prompt update)
+     v4.0, v5.0 … major releases (new tab, new integration, redesign)
+   The badge, tooltip, and console log all read from here automatically.
+───────────────────────────────────────────────────────────────────── */
+const APP_VERSION      = 'v3.0';
+const APP_VERSION_DATE = 'May 2026';
+const APP_VERSION_NOTE = 'Batch save · Numeric Delhivery AWB · ERP auto-sync · Duplicate prevention';
+
+// Stamp the version badge and log to console on load
+(function(){
+  const b = document.getElementById('verBadge');
+  if(b){
+    b.textContent = APP_VERSION;
+    b.title = 'IBI Package Tracker ' + APP_VERSION
+            + ' \u00b7 ' + APP_VERSION_DATE
+            + '\n' + APP_VERSION_NOTE;
+  }
+  console.info('%cIBI Package Tracker ' + APP_VERSION,'color:#00D4F0;font-weight:bold;font-size:13px;');
+  console.info('%c' + APP_VERSION_DATE + ' \u00b7 ' + APP_VERSION_NOTE,'color:#aaa;font-size:11px;');
+})();
 
 const COURIER_MAP = {
   'Amazon':'Amazon Transportation Services','Amazon Bazaar':'Amazon Transportation Services',
