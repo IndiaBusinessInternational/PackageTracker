@@ -972,9 +972,9 @@ const GAS = 'https://script.google.com/macros/s/AKfycbxLPmBJmkgFbO-5Ew5uObdVGwMN
      v3.1, v3.2 … small patch  (bug fix, minor UI tweak, prompt update)
      v4.0, v5.0 … major release (new tab, new integration, full redesign)
 ─────────────────────────────────────────────────────────────────────── */
-const APP_VERSION      = 'v10.4';
+const APP_VERSION      = 'v10.3';
 const APP_VERSION_DATE = 'June 2026';
-const APP_VERSION_NOTE = 'GAS build 89 · FIX: Flipkart duplicate rows. On a re-ship the same Flipkart order arrives once as the bare Order ID (OD…) and once with the Invoice No glued on (OD…-LWACJIC…), each with its own AWB — which slipped past dedup and made a 5th row where there should be 4. The backend now collapses any Flipkart Order ID to its bare OD base for both dedup and storage, so the bare and invoice-suffixed forms count as one order. Meesho _1/_2 sub-orders and every other platform are untouched. Tip: any existing extra rows clear with one click of 🗑️ Remove Duplicates.';
+const APP_VERSION_NOTE = 'GAS build 88 · NEW: barcode-only AWB recovery. On Amazon Easy Ship labels the AWB is a barcode image, so it was missing from the text layer. Now, when the AWB is in neither the filename nor the text, the label area is OCR\'d to read the printed AWB digits and fed to DeepSeek. Verified: a TBA barcode-only AWB absent from the text layer is recovered by OCR. Reminder: keeping the original Amazon filename (IN-xxx_<AWB>_SHIPMENT_supplier_copy.pdf) still auto-fills the AWB instantly with no OCR. (Ship Date is usually not printed on Amazon invoices — it fills from the order report.) Paying for DeepSeek only adds token volume, not accuracy.';
 
 (function(){
   const b = document.getElementById('verBadge');

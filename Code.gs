@@ -1,23 +1,6 @@
 // ============================================================
 //  IBI PACKAGE TRACKER — Complete Google Apps Script
-//  BACKEND BUILD: v1.7  (2026-06-18)
-//  ----------------------------------------------------------
-//  v1.7 CHANGELOG (Flipkart duplicate-row fix):
-//   • ROOT CAUSE of "5 Flipkart rows instead of 4": on a re-ship
-//     the same Flipkart order arrives once as the bare Order ID
-//     (OD…) and once with the Invoice No glued on (OD…-LWACJIC…),
-//     each with its own AWB/invoice. All four dedup tiers missed
-//     it, so a 5th row was created.
-//   • FIX (Flipkart/Shopsy ONLY): normaliseId() now collapses any
-//     "od"+15-22 digits value to its bare base, so the OrderID
-//     dedup tiers — and the Remove Duplicates grouping — treat the
-//     bare and invoice-suffixed forms as one order. The stored
-//     Order ID is also collapsed at write time via
-//     collapseFkOrderId() so new rows hold the clean base.
-//   • Meesho _1/_2 sub-orders, Amazon IDs, AWBs and Invoice Nos are
-//     UNTOUCHED (the "^od\d{15,22}" guard matches Flipkart only).
-//   • Existing extra rows clear with one click of "Remove
-//     Duplicates" (now groups the bare + suffixed forms together).
+//  BACKEND BUILD: v1.6  (2026-06-04)
 //  ----------------------------------------------------------
 //  v1.6 CHANGELOG (corrected diagnosis — date was the only bug):
 //   • Seller Central confirmed the orders that looked like a
@@ -415,7 +398,7 @@ function confirmPackage(e) {
   const p = e.parameter;
   const platform  = p.platform  || '';
   const courier   = p.courier   || COURIER_MAP[platform] || 'Unknown';
-  const orderId   = collapseFkOrderId(p.orderId || '');  // Flipkart: drop any glued Invoice No
+  const orderId   = p.orderId   || '';
   const awb       = p.awb       || '';
 
   // Attempt live tracking on save; fall back to "Shipped" (neutral, honest) if APIs fail
@@ -610,7 +593,7 @@ function confirmBatch(e) {
       var p        = packages[pi];
       var platform = p.platform  || '';
       var courier  = p.courier   || COURIER_MAP[platform] || 'Unknown';
-      var orderId  = collapseFkOrderId(String(p.orderId || ''));  // Flipkart: drop any glued Invoice No
+      var orderId  = String(p.orderId        || '');
       var awb      = String(p.awb            || '');
       var invoiceNo = String(p.invoiceNumber || '');
 
@@ -2810,33 +2793,11 @@ function findRowByOrderId(sheet, orderId, requireEmptyAWB) {
 // Normalise IDs for comparison — strip spaces and lowercase only
 // Do NOT strip _1/_2 suffixes — that causes Meesho sub-order false matches
 function normaliseId(val) {
-  var s = String(val || '')
+  return String(val || '')
     .replace(/[\u00a0\u200b\u200c\u200d\ufeff\u2060]/g, '')  // strip hidden/non-breaking chars
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '');  // collapse all whitespace
-  // Flipkart/Shopsy ONLY: on the tax invoice the Order ID is printed glued to
-  // the Invoice No (e.g. od337737259727708100-lwacjic270000291, or with no
-  // separator at all). That trailing text is NOT part of the order key — it is
-  // the same single package — so collapse any "od"+15-22 digits value to that
-  // bare base. This makes the OrderID dedup tiers (and the Remove Duplicates
-  // grouping) treat the bare and invoice-suffixed forms as ONE order.
-  // The "^od\d{15,22}" guard matches ONLY Flipkart/Shopsy IDs: Meesho order
-  // numbers are purely numeric (no "od" prefix, so their _1/_2 sub-orders stay
-  // distinct), and AWBs / invoice numbers never start with "od"+digits — all
-  // are left exactly as they were.
-  s = s.replace(/^(od\d{15,22}).*$/, '$1');
-  return s;
-}
-
-// Flipkart/Shopsy: collapse an Order ID that has the Invoice No glued onto it
-// (OD…-INVOICE, or glued with no separator) down to the bare "OD"+digits base,
-// preserving case for storage/display. No-op for every other platform's IDs
-// (they never start with "OD"+15-22 digits), so Meesho/Amazon are untouched.
-function collapseFkOrderId(val) {
-  var s = String(val == null ? '' : val).trim();
-  var m = s.match(/^OD\d{15,22}/i);
-  return m ? m[0] : s;
 }
 
 /* Find existing row by Invoice Number — catches cases where Order ID format
