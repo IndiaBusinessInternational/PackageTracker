@@ -358,7 +358,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
       <span id="headerAIName">Gemini</span>
     </div>
     <span class="app-title">Package Tracker</span>
-    <button class="theme-btn" id="ceoBtn" onclick="toggleCeo()" title="CEO access — reveals All Packages, AI Settings &amp; Import Reports">🔒 CEO</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
   </div>
 </header>
@@ -973,14 +972,16 @@ const GAS = 'https://script.google.com/macros/s/AKfycbxLPmBJmkgFbO-5Ew5uObdVGwMN
      v3.1, v3.2 … small patch  (bug fix, minor UI tweak, prompt update)
      v4.0, v5.0 … major release (new tab, new integration, full redesign)
 ─────────────────────────────────────────────────────────────────────── */
-const APP_VERSION      = 'v10.5';
+const APP_VERSION      = 'v10.6';
 const APP_VERSION_DATE = 'June 2026';
-const APP_VERSION_NOTE = 'GAS build 90 · NEW: Meesho sub-orders captured separately — a multi-item Meesho order ships as separate packages (e.g. ₹738 Coir Mat Big + ₹642 Coir Mat Medium), and the extractor now reads each shipping-label "Order No." with its _1/_2 suffix (not the invoice Purchase Order No.), so each saves as its own row and flows into the ERP as ..._1 and ..._2 (backend v1.7). Prior — CEO access gate: The default view is staff-only — just Upload & Track. All Packages, AI Settings and Import Reports stay hidden until the CEO taps the 🔒 CEO button in the header and enters the PIN; tapping again locks them and returns to Upload. This is a visibility gate for in-house use, not hard security — change the PIN in the code (CEO_PIN). Order Processing now pulls its day\'s orders straight from this Tracker, so staff upload here once and then process them there with every field pre-filled. (Prior build 88: barcode-only AWB recovery via OCR for Amazon Easy Ship labels where the AWB is a barcode image.)';
+const APP_VERSION_NOTE = 'Frontend v10.6 · backend unchanged (GAS v1.7) · NEW: CEO access is hidden — there is no visible CEO button; the CEO secretly taps the version badge (top-left, beside the logo) and enters the PIN to reveal All Packages, AI Settings & Import Reports (tap again to lock). Prior: Meesho sub-orders captured separately — a multi-item Meesho order ships as separate packages (e.g. ₹738 Coir Mat Big + ₹642 Coir Mat Medium), and the extractor now reads each shipping-label "Order No." with its _1/_2 suffix (not the invoice Purchase Order No.), so each saves as its own row and flows into the ERP as ..._1 and ..._2 (backend v1.7). Prior — CEO access gate: The default view is staff-only — just Upload & Track. All Packages, AI Settings and Import Reports stay hidden until the CEO taps the 🔒 CEO button in the header and enters the PIN; tapping again locks them and returns to Upload. This is a visibility gate for in-house use, not hard security — change the PIN in the code (CEO_PIN). Order Processing now pulls its day\'s orders straight from this Tracker, so staff upload here once and then process them there with every field pre-filled. (Prior build 88: barcode-only AWB recovery via OCR for Amazon Easy Ship labels where the AWB is a barcode image.)';
 
 (function(){
   const b = document.getElementById('verBadge');
   if(b){
     b.textContent = APP_VERSION;
+    b.style.cursor = 'pointer';
+    b.addEventListener('click', toggleCeo);   // secret CEO gate: tap version badge → PIN
     b.title = 'IBI Package Tracker ' + APP_VERSION + ' \u00b7 ' + APP_VERSION_DATE + '\n' + APP_VERSION_NOTE;
   }
   console.info('%cIBI Package Tracker ' + APP_VERSION,'color:#00D4F0;font-weight:bold;font-size:13px;');
@@ -1015,16 +1016,19 @@ function toggleTheme(){
 /* ─ TABS ─ */
 /* ── CEO ACCESS GATE (PIN) ──────────────────────────────────────────────
    All Packages, AI Settings and Import Reports are hidden in the default
-   (staff) view. The CEO taps "🔒 CEO" and enters the PIN to reveal them;
-   tapping again locks them away and returns to the Upload tab. This is a
-   visibility gate for in-house use, NOT hard security.
+   (staff) view. There is NO visible CEO button — the CEO secretly taps the
+   VERSION BADGE (top-left, beside the logo) and enters the PIN to reveal
+   them; tapping again locks them away and returns to the Upload tab. Staff
+   don't know the gate exists. This is a visibility gate for in-house use,
+   NOT hard security.
    ↓↓↓  CHANGE THIS PIN to your own  ↓↓↓ */
 var CEO_PIN = '8899';
 var _ceoTabs = ['tab-packages','tab-settings','tab-import'];
 var _ceoUnlocked = false;
 function _applyCeoVisibility(){
   _ceoTabs.forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display = _ceoUnlocked ? '' : 'none'; });
-  var btn=document.getElementById('ceoBtn'); if(btn) btn.textContent = _ceoUnlocked ? '🔓 CEO (lock)' : '🔒 CEO';
+  // Subtle indicator on the version badge (the secret CEO toggle): faint glow when unlocked.
+  var vb=document.getElementById('verBadge'); if(vb) vb.style.boxShadow = _ceoUnlocked ? '0 0 6px 1px rgba(0,197,255,.9)' : '';
 }
 function toggleCeo(){
   if(_ceoUnlocked){
